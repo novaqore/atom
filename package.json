@@ -1,0 +1,40 @@
+{
+  "name": "@novaqore/atom",
+  "version": "0.0.1",
+  "description": "A code agent that writes industry-standard code.",
+  "type": "module",
+  "bin": {
+    "atom": "./index.js"
+  },
+  "main": "./index.js",
+  "files": [
+    "index.js",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/novaqore/atom.git"
+  },
+  "bugs": {
+    "url": "https://github.com/novaqore/atom/issues"
+  },
+  "homepage": "https://github.com/novaqore/atom#readme",
+  "author": "NovaQore LLC",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@novaqore/ai": "^0.5.0",
+    "commander": "^14.0.3",
+    "ink": "^6.8.0",
+    "ink-select-input": "^6.2.0",
+    "ink-text-input": "^6.0.0",
+    "react": "^19.2.6"
+  }
+}
