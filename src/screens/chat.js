@@ -292,9 +292,9 @@ export function ChatScreen({ version, unhinged }) {
                 React.createElement(
                   Text,
                   { bold: true, color: "cyan" },
-                  "Atom: "
+                  "Atom:"
                 ),
-                React.createElement(Text, null, firstLine)
+                React.createElement(Text, null, " ", firstLine)
               ),
               rest ? React.createElement(Text, null, rest) : null
             )
@@ -327,9 +327,9 @@ export function ChatScreen({ version, unhinged }) {
             React.createElement(
               Text,
               { color: "cyan", bold: true },
-              "Atom: "
+              "Atom:"
             ),
-            React.createElement(Text, null, firstLine)
+            React.createElement(Text, null, " ", firstLine)
           ),
           rest ? React.createElement(Text, null, rest) : null
         );
