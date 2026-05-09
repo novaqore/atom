@@ -6,7 +6,7 @@ import { tools, executeTool } from "../tools/index.js";
 import { buildSystemPrompt } from "../utils/system-prompt.js";
 import { ChatInput } from "../components/Chat/ChatInput.js";
 import { ConfirmDangorusCommand } from "../components/Chat/ConfirmDangorusCommand.js";
-import { ChatHeader } from "../components/Chat/ChatHeader.js";
+import { Header } from "../components/Header.js";
 
 export function ChatScreen({ version, unhinged }) {
   const [nq] = useState(() => new NovaQoreAI(SERVICE_FILE));
@@ -137,7 +137,7 @@ export function ChatScreen({ version, unhinged }) {
   return React.createElement(
     Box,
     { flexDirection: "column" },
-    React.createElement(ChatHeader, { key: "header", version }),
+    React.createElement(Header, { key: "header", version }),
     ...messages.flatMap((msg, i) => {
       if (msg.role === "user") {
         return [

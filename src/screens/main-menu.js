@@ -1,8 +1,9 @@
 import React from "react";
-import { Box, Text, useApp } from "ink";
+import { Box, useApp } from "ink";
 import SelectInput from "ink-select-input";
 import { unlink } from "node:fs/promises";
 import { SERVICE_FILE } from "../utils/paths.js";
+import { Header } from "../components/Header.js";
 
 const items = [
   { label: "Chat", value: "chat" },
@@ -24,17 +25,11 @@ export function MainMenuScreen({ version, onChat, onReset }) {
 
   return React.createElement(
     Box,
-    { flexDirection: "column", paddingX: 1, paddingBottom: 1 },
-    React.createElement(Text, { bold: true }, "Welcome to Atom"),
-    React.createElement(
-      Text,
-      { dimColor: true },
-      "A code agent that writes industry-standard code."
-    ),
-    React.createElement(Text, { dimColor: true }, `v${version}`),
+    { flexDirection: "column", paddingBottom: 1 },
+    React.createElement(Header, { version }),
     React.createElement(
       Box,
-      { marginTop: 1 },
+      { marginTop: 1, paddingX: 1 },
       React.createElement(SelectInput, { items, onSelect: handleSelect })
     )
   );

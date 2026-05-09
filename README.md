@@ -14,6 +14,14 @@ npm install -g @novaqore/atom
 
 This installs the `atom` command globally.
 
+## Get your keys
+
+Atom runs on the NovaQore AI service. You will need an account and a Quantum Key before you can use the agent.
+
+1. Sign up at [novaqore.ai](https://novaqore.ai).
+2. Generate a UID, Key ID, and Quantum Key from your account dashboard.
+3. Keep them somewhere safe. Atom asks for them on first run.
+
 ## Quick start
 
 Once installed, run it from any directory:
@@ -22,7 +30,7 @@ Once installed, run it from any directory:
 atom
 ```
 
-For now this prints the version. Agent commands are in active development.
+The first run walks you through onboarding and asks for your UID, Key ID, and Quantum Key. They are stored locally in `~/.atom/` and only sent to the NovaQore AI service when you chat.
 
 ## Requirements
 
