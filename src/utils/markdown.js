@@ -40,8 +40,18 @@ function balanceForStreaming(buffer) {
   return out;
 }
 
+const cache = new Map();
+const MAX_CACHE = 500;
+
 export function renderMarkdown(text, { streaming = false } = {}) {
   if (!text) return "";
-  const input = streaming ? balanceForStreaming(text) : text;
-  return marked.parse(input).trim();
+  if (streaming) {
+    return marked.parse(balanceForStreaming(text)).trim();
+  }
+  const cached = cache.get(text);
+  if (cached !== undefined) return cached;
+  const result = marked.parse(text).trim();
+  if (cache.size >= MAX_CACHE) cache.clear();
+  cache.set(text, result);
+  return result;
 }
