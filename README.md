@@ -1,10 +1,11 @@
 # Atom
 
-A code agent built to produce industry-standard code.
+Atom is a server agent. It runs on the box it operates, with shell access at the system level and full awareness of its environment: platform, runtime, shell, and working directory. Use it where you want an autonomous agent that reads, writes, and executes across the whole server, not just inside a project folder.
 
-Atom is a CLI agent for software engineering tasks, built by NovaQore LLC. It is designed around one principle: the output must be code that a senior engineer would ship. Readable, idiomatic, and free of the bloat and bad habits that have crept into general-purpose AI coding tools.
+> [!WARNING]
+> Atom is not intended for personal machines. It runs with shell access at the system level by design. Only use it in isolated environments such as AWS EC2 instances, DigitalOcean droplets, GCP VMs, Hetzner servers, Linode boxes, or Fly.io machines.
 
-> Status: early development (`v0.0.1`). The CLI scaffold is in place; the agent core is being built next.
+> Status: experimental (`v0.0.1`). The CLI scaffold is in place; the agent core is being built next.
 
 ## Install
 
@@ -19,7 +20,7 @@ This installs the `atom` command globally.
 Atom runs on the NovaQore AI service. You will need an account and a Quantum Key before you can use the agent.
 
 1. Sign up at [novaqore.ai](https://novaqore.ai).
-2. Generate a UID, Key ID, and Quantum Key from your account dashboard.
+2. Generate a UID, Key ID, and Quantum Key at [chat.novaqore.ai/keys](https://chat.novaqore.ai/keys).
 3. Keep them somewhere safe. Atom asks for them on first run.
 
 ## Quick start

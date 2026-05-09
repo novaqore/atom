@@ -16,19 +16,17 @@ export function UnhingedWarningScreen({ onConfirm }) {
     React.createElement(Text, { color: "red", bold: true }, "UNHINGED MODE"),
     React.createElement(
       Box,
-      { marginTop: 1, flexDirection: "column" },
+      { marginTop: 1, flexDirection: "column", gap: 1 },
       React.createElement(
         Text,
         null,
         "Atom will run shell commands on this machine without asking for confirmation, including destructive ones like rm and sudo."
       ),
-      React.createElement(Text, null, ""),
       React.createElement(
         Text,
         null,
         "Best used on isolated environments such as AWS instances, DigitalOcean droplets, or disposable containers."
       ),
-      React.createElement(Text, null, ""),
       React.createElement(
         Text,
         { dimColor: true },

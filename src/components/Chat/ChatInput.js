@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import { homedir } from "node:os";
 import { Box, Text } from "ink";
 import TextInput from "ink-text-input";
+import { HOSTNAME, USERNAME } from "../../utils/system.js";
 
 const SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+const CONTEXT_TOTAL = 262144;
 
 function Spinner() {
   const [i, setI] = useState(0);
@@ -24,18 +26,18 @@ function shortPath(p) {
   return p;
 }
 
-export function ChatInput({ value, onChange, onSubmit, cwd, totalTokens, loading }) {
-  const [cursorOn, setCursorOn] = useState(true);
-
-  useEffect(() => {
-    setCursorOn(true);
-    const id = setInterval(() => setCursorOn((v) => !v), 500);
-    return () => clearInterval(id);
-  }, [value]);
-
+export function ChatInput({
+  value,
+  onChange,
+  onSubmit,
+  cwd,
+  totalTokens,
+  loading,
+  disabled,
+}) {
   return React.createElement(
     Box,
-    { flexDirection: "column", marginTop: 1 },
+    { flexDirection: "column" },
     loading
       ? React.createElement(
           Box,
@@ -44,6 +46,21 @@ export function ChatInput({ value, onChange, onSubmit, cwd, totalTokens, loading
           React.createElement(Text, { dimColor: true }, " Responding...")
         )
       : null,
+    React.createElement(
+      Box,
+      null,
+      React.createElement(
+        Text,
+        { color: "white" },
+        `${USERNAME}@${HOSTNAME} `
+      ),
+      React.createElement(Text, { color: "yellow" }, shortPath(cwd)),
+      React.createElement(
+        Text,
+        { dimColor: true },
+        `  ${totalTokens.toLocaleString()}/${CONTEXT_TOTAL.toLocaleString()} tokens`
+      )
+    ),
     React.createElement(
       Box,
       {
@@ -59,18 +76,9 @@ export function ChatInput({ value, onChange, onSubmit, cwd, totalTokens, loading
         value,
         onChange,
         onSubmit,
-        showCursor: cursorOn,
+        showCursor: !disabled,
+        focus: !disabled,
       })
-    ),
-    React.createElement(
-      Box,
-      null,
-      React.createElement(Text, { color: "yellow" }, shortPath(cwd)),
-      React.createElement(
-        Text,
-        { dimColor: true },
-        `  ${totalTokens.toLocaleString()} tokens`
-      )
     )
   );
 }

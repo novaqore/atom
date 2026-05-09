@@ -7,7 +7,25 @@ const items = [
   { label: "No", value: false },
 ];
 
-export function ConfirmDangorusCommand({ command, onAnswer }) {
+function YellowIndicator({ isSelected }) {
+  return React.createElement(
+    Box,
+    { marginRight: 1 },
+    isSelected
+      ? React.createElement(Text, { color: "yellow" }, "❯")
+      : React.createElement(Text, null, " ")
+  );
+}
+
+function YellowItem({ isSelected, label }) {
+  return React.createElement(
+    Text,
+    isSelected ? { color: "yellow" } : null,
+    label
+  );
+}
+
+export function ConfirmDangerousCommand({ command, onAnswer }) {
   return React.createElement(
     Box,
     {
@@ -21,6 +39,8 @@ export function ConfirmDangorusCommand({ command, onAnswer }) {
     React.createElement(SelectInput, {
       items,
       onSelect: (item) => onAnswer(item.value),
+      indicatorComponent: YellowIndicator,
+      itemComponent: YellowItem,
     })
   );
 }

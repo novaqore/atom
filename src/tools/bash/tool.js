@@ -48,15 +48,24 @@ export default {
     const wrapped = `${command}\nprintf '%s%s' '${PWD_MARKER}' "$(pwd)"`;
 
     try {
-      const { stdout, stderr } = await execAsync(wrapped, { cwd: startDir });
-      const { output, newCwd } = parsePwd(stdout || stderr || "");
+      const { stdout = "", stderr = "" } = await execAsync(wrapped, {
+        cwd: startDir,
+      });
+      const { output: cleanStdout, newCwd } = parsePwd(stdout);
       if (newCwd && setCwd) setCwd(newCwd);
-      return output.replace(/\s+$/, "");
+      return [cleanStdout.trimEnd(), stderr.trimEnd()]
+        .filter(Boolean)
+        .join("\n")
+        .replace(/\s+$/, "");
     } catch (err) {
-      const raw = [err.stdout, err.stderr].filter(Boolean).join("\n");
-      const { output, newCwd } = parsePwd(raw);
+      const stdout = err.stdout || "";
+      const stderr = err.stderr || "";
+      const { output: cleanStdout, newCwd } = parsePwd(stdout);
       if (newCwd && setCwd) setCwd(newCwd);
-      return `Error (exit ${err.code ?? "?"}): ${err.message}\n${output}`.replace(
+      const body = [cleanStdout.trimEnd(), stderr.trimEnd()]
+        .filter(Boolean)
+        .join("\n");
+      return `Error (exit ${err.code ?? "?"}): ${err.message}\n${body}`.replace(
         /\s+$/,
         ""
       );
