@@ -6,10 +6,14 @@ import { tools, executeTool } from "../tools/index.js";
 import { buildSystemPrompt } from "../utils/system-prompt.js";
 import { ChatInput } from "../components/Chat/ChatInput.js";
 import { ConfirmDangerousCommand } from "../components/Chat/ConfirmDangerousCommand.js";
+import { UserMessage } from "../components/Chat/UserMessage.js";
+import { AssistantMessage } from "../components/Chat/AssistantMessage.js";
+import { ToolCall } from "../components/Chat/ToolCall.js";
+import { ToolResult } from "../components/Chat/ToolResult.js";
+import { RunningIndicator } from "../components/Chat/RunningIndicator.js";
 import { Header } from "../components/Header.js";
-import { renderMarkdown } from "../utils/markdown.js";
 
-export function ChatScreen({ version, unhinged }) {
+export function ChatScreen({ version, unhinged, onBack }) {
   const [nq] = useState(() => new NovaQoreAI(SERVICE_FILE));
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -23,6 +27,7 @@ export function ChatScreen({ version, unhinged }) {
   const [running, setRunning] = useState(null);
   const [durations, setDurations] = useState({});
   const stopRef = useRef(null);
+  const abortedRef = useRef(false);
 
   const toApiMessage = (m) => {
     if (m.role === "tool") {
@@ -44,11 +49,15 @@ export function ChatScreen({ version, unhinged }) {
   }, [running?.id]);
 
   useInput((_input, key) => {
-    if (key.escape && sending && stopRef.current) {
+    if (!key.escape) return;
+    if (sending && stopRef.current) {
+      abortedRef.current = true;
       const stop = stopRef.current;
       stopRef.current = null;
       stop();
+      return;
     }
+    if (!sending && onBack) onBack();
   });
 
   const askConfirm = (command) =>
@@ -62,9 +71,6 @@ export function ChatScreen({ version, unhinged }) {
     setInput("");
     setSending(true);
     setError(null);
-
-    let acc = "";
-    let toolCalls = [];
 
     try {
       while (true) {
@@ -80,8 +86,8 @@ export function ChatScreen({ version, unhinged }) {
         );
         stopRef.current = stop;
 
-        acc = "";
-        toolCalls = [];
+        let acc = "";
+        const toolCalls = [];
         for await (const chunk of stream) {
           if (chunk.timings) {
             const t = chunk.timings;
@@ -122,12 +128,23 @@ export function ChatScreen({ version, unhinged }) {
           }
         }
 
+        setStreaming("");
+        setStreamingTools([]);
+
+        if (abortedRef.current) {
+          abortedRef.current = false;
+          if (acc.trim()) {
+            const partial = { role: "assistant", content: acc };
+            convo = [...convo, partial];
+            setMessages(convo);
+          }
+          break;
+        }
+
         const assistantMsg = { role: "assistant", content: acc };
         if (toolCalls.length > 0) assistantMsg.tool_calls = toolCalls;
         convo = [...convo, assistantMsg];
         setMessages(convo);
-        setStreaming("");
-        setStreamingTools([]);
 
         if (toolCalls.length === 0) break;
 
@@ -155,105 +172,14 @@ export function ChatScreen({ version, unhinged }) {
       }
       setSending(false);
     } catch (err) {
-      const aborted =
-        err.name === "AbortError" ||
-        err.code === "ABORT_ERR" ||
-        /aborted/i.test(err.message || "");
-      if (aborted) {
-        if (acc.trim() || toolCalls.length > 0) {
-          const partial = { role: "assistant", content: acc };
-          if (toolCalls.length > 0) partial.tool_calls = toolCalls;
-          setMessages((prev) => [...prev, partial]);
-        }
-        setStreaming("");
-        setStreamingTools([]);
-      } else {
-        setError(
-          `${err.message} | ${err.cause?.code || ""} ${err.cause?.message || ""}`
-        );
-      }
+      setError(
+        `${err.message} | ${err.cause?.code || ""} ${err.cause?.message || ""}`
+      );
       setSending(false);
     } finally {
       stopRef.current = null;
+      abortedRef.current = false;
     }
-  };
-
-  const formatToolName = (name) =>
-    name.charAt(0).toUpperCase() + name.slice(1);
-
-  const formatToolArgs = (rawArgs) => {
-    try {
-      const parsed = JSON.parse(rawArgs || "{}");
-      const keys = Object.keys(parsed);
-      if (keys.length === 1) return String(parsed[keys[0]]);
-      return keys.map((k) => `${k}=${JSON.stringify(parsed[k])}`).join(", ");
-    } catch {
-      return rawArgs || "";
-    }
-  };
-
-  const renderToolCall = (tc, key) =>
-    React.createElement(
-      Box,
-      { key },
-      React.createElement(
-        Text,
-        { bold: true, color: "yellow" },
-        formatToolName(tc.function.name)
-      ),
-      React.createElement(Text, { dimColor: true }, "("),
-      React.createElement(Text, null, formatToolArgs(tc.function.arguments)),
-      React.createElement(Text, { dimColor: true }, ")")
-    );
-
-  const MAX_OUTPUT_LINES = 2;
-
-  const formatMs = (ms) =>
-    ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`;
-
-  const renderToolResult = (msg, key) => {
-    const content = (msg.content || "").trimEnd();
-    const ms = durations[msg.tool_call_id];
-    const dur = ms ? ` · ${formatMs(ms)}` : "";
-    if (!content) {
-      return React.createElement(
-        Box,
-        { key, paddingLeft: 2, marginBottom: 1 },
-        React.createElement(
-          Text,
-          { dimColor: true },
-          `⎿  (No output)${dur}`
-        )
-      );
-    }
-    const lines = content.split("\n");
-    const visible = lines.slice(0, MAX_OUTPUT_LINES);
-    const overflow = lines.length - MAX_OUTPUT_LINES;
-
-    const children = visible.map((line, idx) => {
-      const isLastShown = idx === visible.length - 1 && overflow === 0;
-      const suffix = isLastShown ? dur : "";
-      return React.createElement(
-        Text,
-        { key: `line-${idx}`, dimColor: true },
-        idx === 0 ? `⎿  ${line}${suffix}` : `   ${line}${suffix}`
-      );
-    });
-    if (overflow > 0) {
-      children.push(
-        React.createElement(
-          Text,
-          { key: "overflow", dimColor: true },
-          `   … +${overflow} lines${dur}`
-        )
-      );
-    }
-
-    return React.createElement(
-      Box,
-      { key, flexDirection: "column", paddingLeft: 2, marginBottom: 1 },
-      children
-    );
   };
 
   return React.createElement(
@@ -263,88 +189,59 @@ export function ChatScreen({ version, unhinged }) {
     ...messages.flatMap((msg, i) => {
       if (msg.role === "user") {
         return [
-          React.createElement(
-            Box,
-            { key: `m-${i}`, marginBottom: 1 },
-            React.createElement(Text, { bold: true, color: "white" }, "You: "),
-            React.createElement(Text, { dimColor: true }, msg.content)
-          ),
+          React.createElement(UserMessage, {
+            key: `m-${i}`,
+            content: msg.content,
+          }),
         ];
       }
       if (msg.role === "assistant") {
         const nodes = [];
         if (msg.content) {
-          const rendered = renderMarkdown(msg.content);
-          const nlIdx = rendered.indexOf("\n");
-          const firstLine = nlIdx === -1 ? rendered : rendered.slice(0, nlIdx);
-          const rest = nlIdx === -1 ? "" : rendered.slice(nlIdx + 1);
           nodes.push(
-            React.createElement(
-              Box,
-              {
-                key: `m-${i}`,
-                marginBottom: 1,
-                flexDirection: "column",
-              },
-              React.createElement(
-                Box,
-                null,
-                React.createElement(
-                  Text,
-                  { bold: true, color: "cyan" },
-                  "Atom:"
-                ),
-                React.createElement(Text, null, " ", firstLine)
-              ),
-              rest ? React.createElement(Text, null, rest) : null
-            )
+            React.createElement(AssistantMessage, {
+              key: `m-${i}`,
+              content: msg.content,
+            })
           );
         }
         if (msg.tool_calls) {
           for (let j = 0; j < msg.tool_calls.length; j++) {
-            nodes.push(renderToolCall(msg.tool_calls[j], `m-${i}-tc-${j}`));
+            nodes.push(
+              React.createElement(ToolCall, {
+                key: `m-${i}-tc-${j}`,
+                tc: msg.tool_calls[j],
+              })
+            );
           }
         }
         return nodes;
       }
       if (msg.role === "tool") {
-        return [renderToolResult(msg, `m-${i}`)];
+        return [
+          React.createElement(ToolResult, {
+            key: `m-${i}`,
+            msg,
+            duration: durations[msg.tool_call_id],
+          }),
+        ];
       }
       return [];
     }),
     streaming &&
-      (() => {
-        const rendered = renderMarkdown(streaming, { streaming: true });
-        const nlIdx = rendered.indexOf("\n");
-        const firstLine = nlIdx === -1 ? rendered : rendered.slice(0, nlIdx);
-        const rest = nlIdx === -1 ? "" : rendered.slice(nlIdx + 1);
-        return React.createElement(
-          Box,
-          { key: "streaming", flexDirection: "column" },
-          React.createElement(
-            Box,
-            null,
-            React.createElement(
-              Text,
-              { color: "cyan", bold: true },
-              "Atom:"
-            ),
-            React.createElement(Text, null, " ", firstLine)
-          ),
-          rest ? React.createElement(Text, null, rest) : null
-        );
-      })(),
-    ...streamingTools.map((tc, j) => renderToolCall(tc, `streaming-tc-${j}`)),
+      React.createElement(AssistantMessage, {
+        key: "streaming",
+        content: streaming,
+        streaming: true,
+      }),
+    ...streamingTools.map((tc, j) =>
+      React.createElement(ToolCall, { key: `streaming-tc-${j}`, tc })
+    ),
     running &&
-      React.createElement(
-        Box,
-        { key: "running", paddingLeft: 2, marginBottom: 1 },
-        React.createElement(
-          Text,
-          { dimColor: true },
-          `⎿  running ${formatMs(running.elapsed)}`
-        )
-      ),
+      React.createElement(RunningIndicator, {
+        key: "running",
+        elapsed: running.elapsed,
+      }),
     error &&
       React.createElement(Text, { key: "error", color: "red" }, `Error: ${error}`),
     confirm

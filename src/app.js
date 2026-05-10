@@ -60,7 +60,11 @@ export function App({ version, unhinged }) {
     });
   }
   if (screen === "chat") {
-    return React.createElement(ChatScreen, { version, unhinged });
+    return React.createElement(ChatScreen, {
+      version,
+      unhinged,
+      onBack: () => setScreen("main-menu"),
+    });
   }
   if (screen === "system") {
     return React.createElement(SystemScreen, {
