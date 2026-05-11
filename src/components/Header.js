@@ -4,7 +4,7 @@ import { Box, Text } from "ink";
 import { DISK } from "../utils/system.js";
 import { RUNTIMES } from "../utils/runtimes.js";
 
-export function Header({ version, unhinged }) {
+export const Header = React.memo(function Header({ version, unhinged }) {
   const cpuList = cpus();
   const cpuCount = cpuList?.length || 0;
   const cpuSpeed = cpuList?.[0]?.speed || 0;
@@ -61,4 +61,4 @@ export function Header({ version, unhinged }) {
       React.createElement(Text, { dimColor: true }, hardwareParts.join(" · "))
     )
   );
-}
+});

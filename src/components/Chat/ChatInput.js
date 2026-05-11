@@ -26,15 +26,15 @@ function shortPath(p) {
   return p;
 }
 
-export function ChatInput({
-  value,
-  onChange,
-  onSubmit,
-  cwd,
-  totalTokens,
-  loading,
-  disabled,
-}) {
+export function ChatInput({ onSubmit, cwd, totalTokens, loading, disabled }) {
+  const [value, setValue] = useState("");
+
+  const handleSubmit = (val) => {
+    if (!val.trim() || disabled) return;
+    setValue("");
+    onSubmit(val);
+  };
+
   return React.createElement(
     Box,
     { flexDirection: "column" },
@@ -74,8 +74,8 @@ export function ChatInput({
       React.createElement(Text, { dimColor: true }, "❯ "),
       React.createElement(TextInput, {
         value,
-        onChange,
-        onSubmit,
+        onChange: setValue,
+        onSubmit: handleSubmit,
         showCursor: !disabled,
         focus: !disabled,
       })

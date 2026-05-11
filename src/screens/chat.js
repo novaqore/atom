@@ -16,7 +16,6 @@ import { Header } from "../components/Header.js";
 export function ChatScreen({ version, unhinged, onBack }) {
   const [nq] = useState(() => new NovaQoreAI(SERVICE_FILE));
   const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState("");
   const [streamingTools, setStreamingTools] = useState([]);
   const [sending, setSending] = useState(false);
@@ -68,7 +67,6 @@ export function ChatScreen({ version, unhinged, onBack }) {
 
     let convo = [...messages, { role: "user", content: text }];
     setMessages(convo);
-    setInput("");
     setSending(true);
     setError(null);
 
@@ -235,7 +233,11 @@ export function ChatScreen({ version, unhinged, onBack }) {
         streaming: true,
       }),
     ...streamingTools.map((tc, j) =>
-      React.createElement(ToolCall, { key: `streaming-tc-${j}`, tc })
+      React.createElement(ToolCall, {
+        key: `streaming-tc-${j}`,
+        tc,
+        streaming: true,
+      })
     ),
     running &&
       React.createElement(RunningIndicator, {
@@ -256,8 +258,6 @@ export function ChatScreen({ version, unhinged, onBack }) {
         })
       : React.createElement(ChatInput, {
           key: "input",
-          value: input,
-          onChange: setInput,
           onSubmit: handleSubmit,
           cwd,
           totalTokens: usage.total,
