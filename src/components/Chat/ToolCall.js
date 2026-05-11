@@ -16,7 +16,7 @@ function formatArgs(rawArgs) {
   }
 }
 
-export function ToolCall({ tc }) {
+export const ToolCall = React.memo(function ToolCall({ tc }) {
   return React.createElement(
     Text,
     null,
@@ -29,4 +29,4 @@ export function ToolCall({ tc }) {
     formatArgs(tc.function.arguments),
     React.createElement(Text, { dimColor: true }, ")")
   );
-}
+});

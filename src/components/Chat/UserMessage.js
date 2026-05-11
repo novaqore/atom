@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Text } from "ink";
 
-export function UserMessage({ content }) {
+export const UserMessage = React.memo(function UserMessage({ content }) {
   return React.createElement(
     Box,
     { marginBottom: 1 },
@@ -13,4 +13,4 @@ export function UserMessage({ content }) {
       React.createElement(Text, { dimColor: true }, content)
     )
   );
-}
+});

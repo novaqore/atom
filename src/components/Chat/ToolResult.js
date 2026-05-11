@@ -7,7 +7,7 @@ function formatMs(ms) {
   return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`;
 }
 
-export function ToolResult({ msg, duration }) {
+export const ToolResult = React.memo(function ToolResult({ msg, duration }) {
   const content = (msg.content || "").trimEnd();
   const dur = duration ? ` · ${formatMs(duration)}` : "";
 
@@ -47,4 +47,4 @@ export function ToolResult({ msg, duration }) {
     { flexDirection: "column", paddingLeft: 2, marginBottom: 1 },
     children
   );
-}
+});

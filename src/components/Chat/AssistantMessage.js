@@ -2,7 +2,10 @@ import React from "react";
 import { Box, Text } from "ink";
 import { renderMarkdown } from "../../utils/markdown.js";
 
-export function AssistantMessage({ content, streaming = false }) {
+export const AssistantMessage = React.memo(function AssistantMessage({
+  content,
+  streaming = false,
+}) {
   const rendered = renderMarkdown(content, { streaming });
   const nlIdx = rendered.indexOf("\n");
   const firstLine = nlIdx === -1 ? rendered : rendered.slice(0, nlIdx);
@@ -20,4 +23,4 @@ export function AssistantMessage({ content, streaming = false }) {
     ),
     rest ? React.createElement(Text, null, rest) : null
   );
-}
+});
