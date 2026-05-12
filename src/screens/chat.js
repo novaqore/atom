@@ -1,13 +1,15 @@
 import { execSync } from 'child_process';
 import { nq } from '../lib/novaqore.js';
 import { tools } from '../utils/tools.js';
+import { system_prompt } from '../utils/system_prompt.js';
 
 export default async function chat() {
 
   process.stdin.setEncoding('utf8');
   process.stdin.resume();
   const width = process.stdout.columns || 80;
-  let messages = [];
+
+  let messages = [system_prompt];
 
   process.stdout.write('\x1b[90m' + '─'.repeat(width) + '\x1b[0m');
   process.stdout.write('\x1b[90m> \x1b[0m');
