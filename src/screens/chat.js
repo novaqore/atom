@@ -1,268 +1,125 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Box, Text, useInput } from "ink";
-import NovaQoreAI from "@novaqore/ai";
-import { SERVICE_FILE } from "../utils/paths.js";
-import { tools, executeTool } from "../tools/index.js";
-import { buildSystemPrompt } from "../utils/system-prompt.js";
-import { ChatInput } from "../components/Chat/ChatInput.js";
-import { ConfirmDangerousCommand } from "../components/Chat/ConfirmDangerousCommand.js";
-import { UserMessage } from "../components/Chat/UserMessage.js";
-import { AssistantMessage } from "../components/Chat/AssistantMessage.js";
-import { ToolCall } from "../components/Chat/ToolCall.js";
-import { ToolResult } from "../components/Chat/ToolResult.js";
-import { RunningIndicator } from "../components/Chat/RunningIndicator.js";
-import { Header } from "../components/Header.js";
+import { execSync } from 'child_process';
+import { nq } from '../lib/novaqore.js';
+import { tools } from '../utils/tools.js';
 
-export function ChatScreen({ version, unhinged, onBack }) {
-  const [nq] = useState(() => new NovaQoreAI(SERVICE_FILE));
-  const [messages, setMessages] = useState([]);
-  const [streaming, setStreaming] = useState("");
-  const [streamingTools, setStreamingTools] = useState([]);
-  const [sending, setSending] = useState(false);
-  const [error, setError] = useState(null);
-  const [confirm, setConfirm] = useState(null);
-  const [usage, setUsage] = useState({ prompt: 0, completion: 0, total: 0 });
-  const [cwd, setCwd] = useState(process.cwd());
-  const [running, setRunning] = useState(null);
-  const [durations, setDurations] = useState({});
-  const stopRef = useRef(null);
-  const abortedRef = useRef(false);
+export default async function chat() {
 
-  const toApiMessage = (m) => {
-    if (m.role === "tool") {
-      return {
-        role: "tool",
-        tool_call_id: m.tool_call_id,
-        content: m.content,
+  process.stdin.setEncoding('utf8');
+  process.stdin.resume();
+  const width = process.stdout.columns || 80;
+  let messages = [];
+
+  process.stdout.write('\x1b[90m' + '─'.repeat(width) + '\x1b[0m');
+  process.stdout.write('\x1b[90m> \x1b[0m');
+
+  for await (const line of process.stdin) {
+    const input = line.trim();
+    if (!input) continue;
+    if (input.toLowerCase() === 'exit') process.exit();
+
+    messages.push({ role: "user", content: input });
+
+    let assistantContent = "";
+    let assistantToolCalls = [];
+    let hasToolCalls = false;
+    
+    const { stream } = await nq.chat(messages, { stream: true, tools });
+
+    for await (const chunk of stream) {
+      const delta = chunk.choices[0]?.delta;
+      
+      if (delta?.content) {
+        process.stdout.write(delta.content);
+        assistantContent += delta.content;
+      }
+
+      if (delta?.tool_calls) {
+        hasToolCalls = true;
+        for (const tc of delta.tool_calls) {
+          const index = tc.index || 0;
+          if (!assistantToolCalls[index]) {
+            assistantToolCalls[index] = {
+              id: tc.id || "",
+              type: tc.type || "function",
+              function: { name: "", arguments: "" }
+            };
+          }
+
+          const current = assistantToolCalls[index];
+          
+          if (tc.id) current.id = tc.id;
+          if (tc.type) current.type = tc.type;
+          
+          if (tc.function) {
+            if (tc.function.name) current.function.name = tc.function.name;
+            if (tc.function.arguments) current.function.arguments += tc.function.arguments;
+          }
+        }
+      }
+    }
+    
+    process.stdout.write('\n');
+
+    assistantToolCalls = assistantToolCalls.filter(tc => tc && tc.function.name);
+
+    if (hasToolCalls && assistantToolCalls.length > 0) {
+      const assistantMsg = {
+        role: "assistant",
+        content: assistantContent || null,
+        tool_calls: assistantToolCalls
       };
-    }
-    return m;
-  };
-
-  useEffect(() => {
-    if (!running) return;
-    const id = setInterval(() => {
-      setRunning((r) => (r ? { ...r, elapsed: Date.now() - r.start } : null));
-    }, 100);
-    return () => clearInterval(id);
-  }, [running?.id]);
-
-  useInput((_input, key) => {
-    if (!key.escape) return;
-    if (sending && stopRef.current) {
-      abortedRef.current = true;
-      const stop = stopRef.current;
-      stopRef.current = null;
-      stop();
-      return;
-    }
-    if (!sending && onBack) onBack();
-  });
-
-  const askConfirm = (command) =>
-    new Promise((resolve) => setConfirm({ command, resolve }));
-
-  const handleSubmit = async (text) => {
-    if (!text.trim() || sending) return;
-
-    let convo = [...messages, { role: "user", content: text }];
-    setMessages(convo);
-    setSending(true);
-    setError(null);
-
-    try {
-      while (true) {
-        setStreaming("");
-        setStreamingTools([]);
-
-        const { stream, stop } = await nq.chat(
-          [
-            { role: "system", content: buildSystemPrompt() },
-            ...convo.map(toApiMessage),
-          ],
-          { stream: true, tools }
-        );
-        stopRef.current = stop;
-
-        let acc = "";
-        const toolCalls = [];
-        for await (const chunk of stream) {
-          if (chunk.timings) {
-            const t = chunk.timings;
-            const promptTokens = (t.cache_n || 0) + (t.prompt_n || 0);
-            const completionTokens = t.predicted_n || 0;
-            setUsage((prev) => ({
-              prompt: prev.prompt + promptTokens,
-              completion: prev.completion + completionTokens,
-              total: prev.total + promptTokens + completionTokens,
-            }));
-          }
-          const delta = chunk.choices[0]?.delta;
-          if (delta?.content) {
-            acc += delta.content;
-            setStreaming(acc);
-          }
-          if (delta?.tool_calls) {
-            for (const tc of delta.tool_calls) {
-              const i = tc.index ?? 0;
-              if (!toolCalls[i]) {
-                toolCalls[i] = {
-                  id: tc.id || "",
-                  type: "function",
-                  function: {
-                    name: tc.function?.name || "",
-                    arguments: tc.function?.arguments || "",
-                  },
-                };
-              } else {
-                if (tc.id) toolCalls[i].id = tc.id;
-                if (tc.function?.name)
-                  toolCalls[i].function.name += tc.function.name;
-                if (tc.function?.arguments)
-                  toolCalls[i].function.arguments += tc.function.arguments;
-              }
+      messages.push(assistantMsg);
+      
+      const toolResults = [];
+      
+      for (const tc of assistantToolCalls) {
+        const { command } = JSON.parse(tc.function.arguments)
+        process.stdout.write(`\x1b[33m${tc.function.name.charAt(0).toUpperCase() + tc.function.name.slice(1)}\x1b[0m ${command}`);        
+        let result = "Error: Unknown tool";
+        
+        try {
+          const args = JSON.parse(tc.function.arguments);
+          if (tc.function.name === "bash") {
+            try {
+              result = execSync(args.command, { encoding: 'utf8', timeout: 5000});
+              process.stdout.write('\n\x1b[90m' + result + '\x1b[0m');
+            } catch (err) {
+              result = err.stderr || err.message || "Command failed";
             }
-            setStreamingTools([...toolCalls]);
           }
+          
+        } catch (e) {
+          result = `JSON Parse Error: ${e.message}`;
         }
+        process.stdout.write('\n\n');
 
-        setStreaming("");
-        setStreamingTools([]);
+        toolResults.push({
+          tool_call_id: tc.id,
+          role: "tool",
+          content: result
+        });
+      }
 
-        if (abortedRef.current) {
-          abortedRef.current = false;
-          if (acc.trim()) {
-            const partial = { role: "assistant", content: acc };
-            convo = [...convo, partial];
-            setMessages(convo);
-          }
-          break;
-        }
+      messages.push(...toolResults);
 
-        const assistantMsg = { role: "assistant", content: acc };
-        if (toolCalls.length > 0) assistantMsg.tool_calls = toolCalls;
-        convo = [...convo, assistantMsg];
-        setMessages(convo);
-
-        if (toolCalls.length === 0) break;
-
-        for (const tc of toolCalls) {
-          const start = Date.now();
-          setRunning({ id: tc.id, start, elapsed: 0 });
-          const result = await executeTool(
-            tc.function.name,
-            tc.function.arguments,
-            { askConfirm, unhinged, cwd, setCwd }
-          );
-          const duration = Date.now() - start;
-          setRunning(null);
-          setDurations((prev) => ({ ...prev, [tc.id]: duration }));
-          convo = [
-            ...convo,
-            {
-              role: "tool",
-              tool_call_id: tc.id,
-              content: result,
-            },
-          ];
-          setMessages(convo);
+      const { stream: finalStream } = await nq.chat(messages, { stream: true, tools });
+      let finalResponse = "";
+      
+      for await (const chunk of finalStream) {
+        const content = chunk.choices[0]?.delta?.content || '';
+        if (content) {
+          process.stdout.write(content);
+          finalResponse += content;
         }
       }
-      setSending(false);
-    } catch (err) {
-      setError(
-        `${err.message} | ${err.cause?.code || ""} ${err.cause?.message || ""}`
-      );
-      setSending(false);
-    } finally {
-      stopRef.current = null;
-      abortedRef.current = false;
+      
+      messages.push({ role: "assistant", content: finalResponse });
+    } else {
+      messages.push({ role: "assistant", content: assistantContent });
     }
-  };
 
-  return React.createElement(
-    Box,
-    { flexDirection: "column" },
-    React.createElement(Header, { key: "header", version, unhinged }),
-    ...messages.flatMap((msg, i) => {
-      if (msg.role === "user") {
-        return [
-          React.createElement(UserMessage, {
-            key: `m-${i}`,
-            content: msg.content,
-          }),
-        ];
-      }
-      if (msg.role === "assistant") {
-        const nodes = [];
-        if (msg.content) {
-          nodes.push(
-            React.createElement(AssistantMessage, {
-              key: `m-${i}`,
-              content: msg.content,
-            })
-          );
-        }
-        if (msg.tool_calls) {
-          for (let j = 0; j < msg.tool_calls.length; j++) {
-            nodes.push(
-              React.createElement(ToolCall, {
-                key: `m-${i}-tc-${j}`,
-                tc: msg.tool_calls[j],
-              })
-            );
-          }
-        }
-        return nodes;
-      }
-      if (msg.role === "tool") {
-        return [
-          React.createElement(ToolResult, {
-            key: `m-${i}`,
-            msg,
-            duration: durations[msg.tool_call_id],
-          }),
-        ];
-      }
-      return [];
-    }),
-    streaming &&
-      React.createElement(AssistantMessage, {
-        key: "streaming",
-        content: streaming,
-        streaming: true,
-      }),
-    ...streamingTools.map((tc, j) =>
-      React.createElement(ToolCall, {
-        key: `streaming-tc-${j}`,
-        tc,
-        streaming: true,
-      })
-    ),
-    running &&
-      React.createElement(RunningIndicator, {
-        key: "running",
-        elapsed: running.elapsed,
-      }),
-    error &&
-      React.createElement(Text, { key: "error", color: "red" }, `Error: ${error}`),
-    confirm
-      ? React.createElement(ConfirmDangerousCommand, {
-          key: "confirm",
-          command: confirm.command,
-          onAnswer: (value) => {
-            const { resolve } = confirm;
-            setConfirm(null);
-            resolve(value);
-          },
-        })
-      : React.createElement(ChatInput, {
-          key: "input",
-          onSubmit: handleSubmit,
-          cwd,
-          totalTokens: usage.total,
-          loading: sending && !streaming && streamingTools.length === 0,
-          disabled: sending,
-        })
-  );
+    process.stdout.write('\n');
+    process.stdout.write('\x1b[90m' + '─'.repeat(width) + '\x1b[0m');
+    process.stdout.write('\x1b[90m> \x1b[0m');
+  }
 }

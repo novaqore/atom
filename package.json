@@ -1,6 +1,6 @@
 {
   "name": "@novaqore/atom",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "A full-system code agent with root-level access, built for isolated servers.",
   "type": "module",
   "bin": {
@@ -31,12 +31,7 @@
   },
   "dependencies": {
     "@novaqore/ai": "^0.5.0",
-    "commander": "^14.0.3",
-    "ink": "^6.8.0",
-    "ink-select-input": "^6.2.0",
-    "ink-text-input": "^6.0.0",
-    "marked": "^15.0.12",
-    "marked-terminal": "^7.3.0",
-    "react": "^19.2.6"
+    "dotenv": "^17.4.2",
+    "prompts": "^2.4.2"
   }
 }
