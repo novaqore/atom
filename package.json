@@ -1,6 +1,6 @@
 {
   "name": "@novaqore/atom",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "A full-system code agent with root-level access, built for isolated servers.",
   "type": "module",
   "bin": {
