@@ -5,7 +5,7 @@ Atom is a server agent. It runs on the box it operates, with shell access at the
 > [!WARNING]
 > Atom is not intended for personal machines. It runs with shell access at the system level by design. Only use it in isolated environments such as AWS EC2 instances, DigitalOcean droplets, GCP VMs, Hetzner servers, Linode boxes, or Fly.io machines.
 
-> Status: experimental (`v0.0.1`). The CLI scaffold is in place; the agent core is being built next.
+> Status: [![npm version](https://badge.fury.io/js/%40novaqore%2Fatom.svg)](https://badge.fury.io/js/%40novaqore%2Fatom)
 
 ## Install
 
