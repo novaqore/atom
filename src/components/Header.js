@@ -15,13 +15,15 @@ export default function header() {
     const cpuCount = os.cpus().length;
     const totalMem = (os.totalmem() / (1024 ** 3)).toFixed(1);
     const homeDir = os.homedir();
+    const shell = process.env.SHELL || process.env.COMSPEC || 'unknown'
 
     const info = [
         `Atom v${version}`,
         `${platform} (${arch})`,
         `${cpuCount} CPUs`,
         `${totalMem} GB RAM`,
-        `Home: ${homeDir}`
+        `Home: ${homeDir}`,
+        `Shell: ${shell}`,
     ].join('  •  ');
 
     console.log(`${info}`);
