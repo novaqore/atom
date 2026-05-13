@@ -16,6 +16,28 @@
   "engines": {
     "node": ">=20"
   },
+  "keywords": [
+    "atom",
+    "ai",
+    "assistant",
+    "linux",
+    "autonomous",
+    "openclaw",
+    "agent",
+    "agi",
+    "server",
+    "autonomous-ai",
+    "ai-agent",
+    "llm",
+    "orchestration",
+    "multi-agent",
+    "tool-use",
+    "reasoning",
+    "memory",
+    "workflow",
+    "automation",
+    "mcp"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/novaqore/atom.git"
