@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import NovaQoreAI from "@novaqore/ai";
 import { execSync } from 'child_process';
 import { tools } from "./src/utils/tools.js";
