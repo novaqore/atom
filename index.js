@@ -3,10 +3,13 @@ import NovaQoreAI from "@novaqore/ai";
 import { execSync } from 'child_process';
 import { tools } from "./src/utils/tools.js";
 import { system_prompt } from "./src/utils/system_prompt.js";
+import { loadEnv } from "./src/utils/env.js";
 import header from "./src/components/header.js";
 
 export default async function app() {
-  const { chat } = new NovaQoreAI();
+  const env = loadEnv();
+  const internalUrl = env?.NOVAQORE_INTERNAL_URL;
+  const { chat } = new NovaQoreAI(internalUrl ? { base_url: internalUrl } : {});
     console.clear()
     header()
     process.stdin.setEncoding('utf8');
