@@ -9,9 +9,10 @@ import header from "./src/components/header.js";
 export default async function app() {
   const env = loadEnv();
   const internalUrl = env?.NOVAQORE_INTERNAL_URL;
-  const { chat } = new NovaQoreAI(internalUrl ? { base_url: internalUrl } : {});
+  const ai = new NovaQoreAI(internalUrl ? { base_url: internalUrl } : {});
+  const { chat } = ai;
     console.clear()
-    header()
+    header(internalUrl)
     process.stdin.setEncoding('utf8');
     process.stdin.resume();
     const width = process.stdout.columns || 80;

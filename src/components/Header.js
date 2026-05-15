@@ -6,7 +6,7 @@ import os from 'os';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export default function header() {
+export default function header(baseUrl) {
     const packageJson = JSON.parse(readFileSync(join(__dirname, '../..', 'package.json'), 'utf8'));
     const version = packageJson.version || '0.0.0';
 
@@ -18,13 +18,14 @@ export default function header() {
     const shell = process.env.SHELL || process.env.COMSPEC || 'unknown'
 
     const info = [
-        `Atom v${version}`,
+        `\x1b[36mAtom v${version}\x1b[0m`,
         `${platform} (${arch})`,
         `${cpuCount} CPUs`,
         `${totalMem} GB RAM`,
         `Home: ${homeDir}`,
         `Shell: ${shell}`,
-    ].join('  •  ');
+        baseUrl && `\x1b[33mAPI: ${baseUrl}\x1b[0m`,
+    ].filter(Boolean).join('  •  ');
 
     console.log(`${info}`);
 }
