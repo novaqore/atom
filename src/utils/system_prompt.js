@@ -12,7 +12,7 @@ const getExecutablePath = (cmd) => {
 
 export const system_prompt = {
     role: "system",
-    content: `Your System Details:
+    content: `Your name is Atom and your System Details are:
 Current Date: ${new Date().toISOString().split('T')[0]}
 Current Time: ${new Date().toLocaleTimeString()}
 OS: ${os.type()} ${os.release()}

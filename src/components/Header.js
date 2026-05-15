@@ -18,13 +18,13 @@ export default function header(baseUrl) {
     const shell = process.env.SHELL || process.env.COMSPEC || 'unknown'
 
     const info = [
-        `\x1b[36mAtom v${version}\x1b[0m`,
+        `\x1b[36mAtom\x1b[0m \x1b[37mv${version}\x1b[0m`,
         `${platform} (${arch})`,
         `${cpuCount} CPUs`,
         `${totalMem} GB RAM`,
         `Home: ${homeDir}`,
         `Shell: ${shell}`,
-        baseUrl && `\x1b[33mAPI: ${baseUrl}\x1b[0m`,
+        baseUrl && `\x1b[33mAPI:\x1b[0m \x1b[37m${baseUrl}\x1b[0m`,
     ].filter(Boolean).join('  •  ');
 
     console.log(`${info}`);
