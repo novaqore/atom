@@ -1,7 +1,7 @@
 import { chat } from "./lib/novaqore.js";
-import { tools, runTool, displayTool, processToolCallDelta } from "./tools/run_tool.js";
+import { tools, runTool, displayTool, processToolCall } from "./tools/run_tool.js";
 import { system_prompt } from "./utils/system_prompt.js";
-import { LoadingSpinner } from "./components/loading.js";
+import { spinner } from "./components/spinner.js";
 import header from "./components/header.js";
 import { wake } from "./utils/wake.js";
 import { colors } from "./utils/theme.js";
@@ -9,7 +9,6 @@ import { rl, mute_input, unmute_input, user_input } from "./helpers/input.js";
 
 export default async function app() {
   let MAX_TOOL_CALLS = 20;
-  const thinking = new LoadingSpinner();
   console.clear()
   header()
 
@@ -47,9 +46,11 @@ export default async function app() {
       let assistantToolCalls = [];
 
       mute_input();
-      thinking.start();
+      spinner.stop();
+      spinner.start('Thinking...', 'cyan');
       let aborted = false;
       let errored = null;
+      let workingStarted = false;
 
       try {
         const { stream, abort } = await chat({ messages, tools });
@@ -59,35 +60,37 @@ export default async function app() {
           const delta = chunk.choices[0]?.delta;
 
           if (delta?.content) {
-            thinking.stop();
+            spinner.stop();
             process.stdout.write(delta.content);
             assistantContent += delta.content;
           }
 
           if (delta?.tool_calls) {
-            thinking.stop();
-            processToolCallDelta(assistantToolCalls, delta.tool_calls);
+            if (!workingStarted) {
+              spinner.stop();
+              spinner.start('Working...', 'yellow');
+              workingStarted = true;
+            }
+            processToolCall(assistantToolCalls, delta);
           }
         }
 
       } catch (err) {
+        spinner.stop();
         if (err.name === 'AbortError') aborted = true;
         else errored = err;
       } finally {
         currentAbort = null;
         unmute_input();
-        thinking.stop();
       }
 
       if (errored) {
-        process.stdout.write(`${colors.red}${errored.message || errored}${colors.reset}\n`);
+        process.stdout.write(`\n${colors.red}${errored.message || errored}${colors.reset}\n`);
         break;
       }
 
-      process.stdout.write('\n');
-
       if (aborted) {
-        process.stdout.write(`${colors.red}[aborted]${colors.reset}\n`);
+        process.stdout.write(`\n${colors.red}[aborted]${colors.reset}\n`);
         if (assistantContent) {
           messages.push({ role: "assistant", content: `${assistantContent} [interrupted by user]` });
         }
@@ -97,6 +100,8 @@ export default async function app() {
       assistantToolCalls = assistantToolCalls.filter(tc => tc && tc.function.name);
 
       if (assistantToolCalls.length === 0) {
+        spinner.stop();
+        process.stdout.write('\n');
         messages.push({ role: "assistant", content: assistantContent });
         break;
       }
@@ -116,9 +121,9 @@ export default async function app() {
           continue;
         }
 
-        process.stdout.write(`${colors.yellow}${name}${colors.reset} ${displayTool(name, args)}`);
+        spinner.stop();
+        process.stdout.write(`\r\x1b[2K${colors.yellow}${name}${colors.reset} ${displayTool(name, args)}\n`);
         result = await runTool(name, args);
-        process.stdout.write(`\n${colors.grey}${result}${colors.reset}\n`);
         messages.push({ tool_call_id: tc.id, role: "tool", content: result });
       }
     }

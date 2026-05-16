@@ -14,8 +14,8 @@ export default function header() {
   const info = [
     `${colors.cyan}Atom${colors.reset} ${colors.white}v${version}${colors.reset}`,
     `${system.platform} (${system.arch})`,
-    `${system.cpuCount} CPUs`,
-    `${system.totalMem} GB RAM`,
+    `CPUs: ${system.cpuCount}`,
+    `RAM: ${system.totalMem}`,
     `Home: ${system.homedir}`,
     `Shell: ${system.shell}`,
     internalUrl && `${colors.yellow}Local:${colors.reset} ${colors.white}${internalUrl}${colors.reset}`,

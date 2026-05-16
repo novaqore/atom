@@ -1,6 +1,8 @@
 import { readdirSync } from 'fs';
 import { fileURLToPath, pathToFileURL } from 'url';
 import path from 'path';
+import { spinner } from '../components/spinner.js';
+import { colors } from '../utils/theme.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const commandsDir = path.join(__dirname, 'commands');
@@ -27,11 +29,17 @@ export function displayTool(name, args) {
 export async function runTool(name, args) {
   const handler = handlers[name];
   if (!handler) return `Error: Unknown tool "${name}"`;
-  return handler(args);
+
+  spinner.start('Working...', 'yellow');
+  const result = await handler(args);
+  spinner.stop();
+  process.stdout.write(`${colors.grey}${result}${colors.reset}\n`);
+  spinner.start('Working...', 'yellow');
+  return result;
 }
 
-export function processToolCallDelta(toolCalls, deltaToolCalls) {
-  for (const tc of deltaToolCalls) {
+export function processToolCall(toolCalls, delta) {
+  for (const tc of delta.tool_calls) {
     const index = tc.index || 0;
     if (!toolCalls[index]) {
       toolCalls[index] = {

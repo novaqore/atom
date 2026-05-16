@@ -2,17 +2,12 @@ import { colors } from '../utils/theme.js';
 
 const FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 
-export class LoadingSpinner {
+class LoadingSpinner {
   #interval = null;
   #i = 0;
-  #text;
-  #color;
+  #text = 'Thinking...';
+  #color = colors.cyan;
   #startTime = 0;
-
-  constructor(text = 'Thinking...', color = 'cyan') {
-    this.#text = text;
-    this.#color = colors[color] || colors.cyan;
-  }
 
   #elapsed() {
     const ms = Date.now() - this.#startTime;
@@ -28,8 +23,10 @@ export class LoadingSpinner {
     process.stdout.write(`\r\x1b[K${this.#color}${frame}${colors.reset} ${colors.white}${this.#text}${colors.reset} ${colors.grey}${this.#elapsed()}${colors.reset}`);
   }
 
-  start() {
+  start(text = 'Thinking...', color = 'cyan') {
     if (this.#interval) return;
+    this.#text = text;
+    this.#color = colors[color] || colors.cyan;
     this.#i = 0;
     this.#startTime = Date.now();
     process.stdout.write('\x1b[?25l');
@@ -44,3 +41,5 @@ export class LoadingSpinner {
     process.stdout.write('\r\x1b[K\x1b[?25h');
   }
 }
+
+export const spinner = new LoadingSpinner();

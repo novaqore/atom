@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { spawn } from 'child_process';
 import { system } from '../../utils/system_details.js';
 
 const { shell, shellName } = system;
@@ -24,11 +24,12 @@ export const definition = {
 export const display = (args) => args.command;
 
 export async function run(args) {
-  try {
-    const out = execSync(args.command, { encoding: 'utf8', timeout: 5000, stdio: 'pipe', shell });
-    return out.trim() ? out : '(no output)';
-  } catch (err) {
-    const out = err.stderr || err.stdout || err.message || 'Command failed';
-    return out.trim() ? out : '(no output)';
-  }
+  return new Promise((resolve) => {
+    const child = spawn(args.command, { shell, timeout: 5000 });
+    let out = '';
+    child.stdout.on('data', d => out += d.toString());
+    child.stderr.on('data', d => out += d.toString());
+    child.on('close', () => resolve(out.trim() ? out : '(no output)'));
+    child.on('error', e => resolve(out.trim() ? out : (e.message || 'Command failed')));
+  });
 }
