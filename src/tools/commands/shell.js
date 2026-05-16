@@ -30,7 +30,7 @@ let currentChild = null;
 
 export async function run(args) {
   return new Promise((resolve) => {
-    spinner.stop();
+    spinner.start('Working...', 'yellow');
     rl.pause();
     process.stdin.pause();
     if (process.stdin.isTTY) process.stdin.setRawMode(false);
@@ -40,6 +40,7 @@ export async function run(args) {
     let out = '';
 
     const onData = (d) => {
+      spinner.stop();
       const text = d.toString();
       out += text;
       process.stdout.write(`${colors.green}${text}${colors.reset}`);
@@ -50,6 +51,7 @@ export async function run(args) {
 
     const finish = (fallback) => {
       currentChild = null;
+      spinner.stop();
       if (process.stdin.isTTY) process.stdin.setRawMode(true);
       process.stdin.resume();
       rl.resume();

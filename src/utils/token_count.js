@@ -1,4 +1,5 @@
 import { colors } from "./theme.js";
+import { spinner } from "../components/spinner.js";
 
 const CONTEXT_SIZE = 262144;
 
@@ -10,5 +11,6 @@ export function addTokens(chunk) {
   total_in += chunk.timings.prompt_n || 0;
   total_out += chunk.timings.predicted_n || 0;
   const total = total_in + total_out;
-  console.log(`\n${colors.grey}[tokens] in: ${total_in}  out: ${total_out}  total: ${total}/${CONTEXT_SIZE}${colors.reset}`);
+  spinner.stop();
+  process.stdout.write(`\r\n${colors.grey}[tokens] in: ${total_in}  out: ${total_out}  total: ${total}/${CONTEXT_SIZE}${colors.reset}\r\n`);
 }

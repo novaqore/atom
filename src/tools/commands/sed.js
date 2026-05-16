@@ -1,0 +1,74 @@
+import { spawn } from 'child_process';
+import { system } from '../../utils/system_details.js';
+
+export const definition = {
+  type: "function",
+  function: {
+    name: "sed",
+    description: `Edit a file in place using sed. Prefer this tool for ANY targeted file edit (substitutions, replacements, deletions). Do NOT rewrite a whole file when sed can do the edit.
+
+Examples:
+- Change a value on a specific line: pass line_num + pattern + replacement
+- Replace all matches in a file: pass pattern + replacement only
+- Fix a typo, update an import path, bump a version string
+
+Pattern is a sed regex. If pattern or replacement contains '/', set delimiter to a safe char like '|' or '#'.`,
+    parameters: {
+      type: "object",
+      properties: {
+        file: { type: "string", description: "Path to the file to edit" },
+        pattern: { type: "string", description: "Sed regex pattern to match" },
+        replacement: { type: "string", description: "Text to substitute in" },
+        line_num: { type: "integer", description: "Optional. Restrict edit to this single line number." },
+        delimiter: { type: "string", description: "Optional. Defaults to '/'. Use a different char if pattern or replacement contains /." }
+      },
+      required: ["file", "pattern", "replacement"]
+    }
+  }
+};
+
+export const display = (args) => {
+  const loc = args.line_num ? `:${args.line_num}` : '';
+  return `${args.file}${loc} :: ${args.pattern} → ${args.replacement}`;
+};
+
+let currentChild = null;
+
+export async function run(args) {
+  return new Promise((resolve) => {
+    const { file, pattern, replacement, line_num } = args;
+    const delim = args.delimiter || '/';
+    const lineSpec = line_num ? `${line_num}` : '';
+    const flags = line_num ? '' : 'g';
+    const sedExpr = `${lineSpec}s${delim}${pattern}${delim}${replacement}${delim}${flags}`;
+
+    const isMac = system.platform === 'darwin';
+    const sedArgs = isMac ? ['-i', '', sedExpr, file] : ['-i', sedExpr, file];
+
+    const child = spawn('sed', sedArgs, { stdio: 'pipe' });
+    currentChild = child;
+    let out = '';
+    child.stdout.on('data', d => out += d.toString());
+    child.stderr.on('data', d => out += d.toString());
+
+    child.on('close', (code) => {
+      currentChild = null;
+      if (code !== 0) {
+        resolve(out.trim() || `sed exited with code ${code}`);
+      } else {
+        resolve(out.trim() || `Edited ${file}`);
+      }
+    });
+    child.on('error', e => {
+      currentChild = null;
+      resolve(e.message || 'sed failed');
+    });
+  });
+}
+
+export function abort() {
+  if (currentChild) {
+    currentChild.kill('SIGKILL');
+    currentChild = null;
+  }
+}

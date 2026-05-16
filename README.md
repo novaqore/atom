@@ -23,6 +23,46 @@ Once installed, run it from any directory:
 atom
 ```
 
+## How it works
+
+### Two tools, by design
+
+Atom ships with exactly two tools:
+
+- **shell** auto-named after your actual shell (`zsh`, `bash`, `powershell`)
+- **sed** for surgical file edits
+
+Only two on purpose. There is no `write_file` tool, so the model is biased toward sed for any edit. Full rewrites are still possible through shell heredoc but slightly awkward, which is the feature.
+
+### Interactive shell
+
+When a shell command needs input (ssh, `read`, `npm init`, password prompts), your terminal is handed to the child process. You type, the child reads, the agent waits. When the child exits, the agent picks back up with the captured output. You can ssh into another machine through Atom and run commands there in full interactive mode.
+
+### Abort
+
+Press ESC at any time to kill both the LLM stream and any running shell command. Instant. The LLM call is torn down via AbortController, the child process via SIGKILL.
+
+## Local LLM (custom base URL)
+
+By default, Atom talks to NovaQore's hosted API. To point it at your own GPU running [llama.cpp](https://github.com/ggerganov/llama.cpp) (or any OpenAI-compatible server), set a custom base URL:
+
+```bash
+atom set base_url http://your-gpu-host:8080
+```
+
+Other commands:
+
+```bash
+atom show base_url    # print the current value
+atom remove base_url  # clear it (falls back to the default)
+```
+
+The setting is persisted to `~/.atom/.env`. Under the hood, Atom uses [@novaqore/ai](https://www.npmjs.com/package/@novaqore/ai). See its README for how requests map to the `/v1/chat/completions` endpoint.
+
+## Roadmap
+
+See [ROADMAP.md](ROADMAP.md) for what's coming next.
+
 ## More info
 
 Atom runs on the NovaQore AI infrastructure. 

@@ -14,3 +14,10 @@ export function loadEnv() {
   });
   return env;
 }
+
+export function saveEnv(env) {
+  const dir = path.dirname(envPath);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  const content = Object.entries(env).map(([k, v]) => `${k}=${v}`).join('\n') + '\n';
+  fs.writeFileSync(envPath, content);
+}
