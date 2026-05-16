@@ -1,5 +1,8 @@
 import { spawn } from 'child_process';
 import { system } from '../../utils/system_details.js';
+import { spinner } from '../../components/spinner.js';
+import { colors } from '../../utils/theme.js';
+import { rl } from '../../helpers/input.js';
 
 const { shell, shellName } = system;
 
@@ -27,19 +30,36 @@ let currentChild = null;
 
 export async function run(args) {
   return new Promise((resolve) => {
-    const child = spawn(args.command, { shell, timeout: 5000 });
+    spinner.stop();
+    rl.pause();
+    process.stdin.pause();
+    if (process.stdin.isTTY) process.stdin.setRawMode(false);
+
+    const child = spawn(args.command, { shell, stdio: ['inherit', 'pipe', 'pipe'] });
     currentChild = child;
     let out = '';
-    child.stdout.on('data', d => out += d.toString());
-    child.stderr.on('data', d => out += d.toString());
-    child.on('close', () => {
+
+    const onData = (d) => {
+      const text = d.toString();
+      out += text;
+      process.stdout.write(`${colors.green}${text}${colors.reset}`);
+    };
+
+    child.stdout.on('data', onData);
+    child.stderr.on('data', onData);
+
+    const finish = (fallback) => {
       currentChild = null;
-      resolve(out.trim() ? out : '(no output)');
-    });
-    child.on('error', e => {
-      currentChild = null;
-      resolve(out.trim() ? out : (e.message || 'Command failed'));
-    });
+      if (process.stdin.isTTY) process.stdin.setRawMode(true);
+      process.stdin.resume();
+      rl.resume();
+      if (out && !out.endsWith('\n')) process.stdout.write('\n');
+      if (!out.trim()) process.stdout.write(`${colors.green}${fallback}${colors.reset}\n`);
+      resolve(out.trim() ? out : fallback);
+    };
+
+    child.on('close', () => finish('(no output)'));
+    child.on('error', (e) => finish(e.message || 'Command failed'));
   });
 }
 
