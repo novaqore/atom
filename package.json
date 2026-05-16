@@ -1,6 +1,6 @@
 {
   "name": "@novaqore/atom",
-  "version": "3.3.1",
+  "version": "3.4.0",
   "description": "Atom is a full-system code agent with root-level access, built for isolated servers.",
   "type": "module",
   "bin": {
