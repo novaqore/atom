@@ -9,8 +9,9 @@ import { rl, mute_input, unmute_input, user_input } from "./helpers/input.js";
 import { addTokens } from "./utils/token_count.js";
 import { abort as abortShell } from "./tools/commands/shell.js";
 
+const MAX_TOOL_CALLS = 20;
+
 export default async function app() {
-  let MAX_TOOL_CALLS = 20;
   console.clear()
   header()
 
@@ -35,7 +36,6 @@ export default async function app() {
     if (input.toLowerCase() === 'exit') process.exit();
 
     messages.push({ role: "user", content: input });
-    process.stdout.write(colors.reset);
 
     let tool_calls = 0;
 
@@ -55,7 +55,6 @@ export default async function app() {
       spinner.start('Thinking...', 'cyan');
       let aborted = false;
       let errored = null;
-      let workingStarted = false;
 
       try {
         const { stream, abort } = await chat({ messages, tools });
@@ -72,11 +71,6 @@ export default async function app() {
           }
 
           if (delta?.tool_calls) {
-            if (!workingStarted) {
-              spinner.stop();
-              spinner.start('Working...', 'yellow');
-              workingStarted = true;
-            }
             processToolCall(assistantToolCalls, delta);
           }
         }

@@ -29,7 +29,6 @@ export async function runTool(name, args) {
   const handler = handlers[name];
   if (!handler) return `Error: Unknown tool "${name}"`;
 
-  spinner.start('Working...', 'yellow');
   const result = await handler(args);
   spinner.start('Working...', 'yellow');
   return result;
