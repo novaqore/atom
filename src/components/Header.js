@@ -1,31 +1,27 @@
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import os from 'os';
+import { colors } from '../utils/theme.js';
+import { system } from '../utils/system_details.js';
+import { internalUrl } from '../lib/novaqore.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
-export default function header(baseUrl) {
-    const packageJson = JSON.parse(readFileSync(join(__dirname, '../..', 'package.json'), 'utf8'));
-    const version = packageJson.version || '0.0.0';
+export default function header() {
+  const packageJson = JSON.parse(readFileSync(join(__dirname, '../..', 'package.json'), 'utf8'));
+  const version = packageJson.version || '0.0.0';
 
-    const arch = os.arch();
-    const platform = os.platform();
-    const cpuCount = os.cpus().length;
-    const totalMem = (os.totalmem() / (1024 ** 3)).toFixed(1);
-    const homeDir = os.homedir();
-    const shell = process.env.SHELL || process.env.COMSPEC || 'unknown'
+  const info = [
+    `${colors.cyan}Atom${colors.reset} ${colors.white}v${version}${colors.reset}`,
+    `${system.platform} (${system.arch})`,
+    `${system.cpuCount} CPUs`,
+    `${system.totalMem} GB RAM`,
+    `Home: ${system.homedir}`,
+    `Shell: ${system.shell}`,
+    internalUrl && `${colors.yellow}Local:${colors.reset} ${colors.white}${internalUrl}${colors.reset}`,
+  ].filter(Boolean).join('  •  ');
 
-    const info = [
-        `\x1b[36mAtom\x1b[0m \x1b[37mv${version}\x1b[0m`,
-        `${platform} (${arch})`,
-        `${cpuCount} CPUs`,
-        `${totalMem} GB RAM`,
-        `Home: ${homeDir}`,
-        `Shell: ${shell}`,
-        baseUrl && `\x1b[33mAPI:\x1b[0m \x1b[37m${baseUrl}\x1b[0m`,
-    ].filter(Boolean).join('  •  ');
-
-    console.log(`${info}`);
+  const width = process.stdout.columns || 80;
+  process.stdout.write(`${info}\n`);
+  process.stdout.write(`${colors.grey}${'─'.repeat(width)}${colors.reset}\n`);
 }
