@@ -23,13 +23,29 @@ export const definition = {
 
 export const display = (args) => args.command;
 
+let currentChild = null;
+
 export async function run(args) {
   return new Promise((resolve) => {
     const child = spawn(args.command, { shell, timeout: 5000 });
+    currentChild = child;
     let out = '';
     child.stdout.on('data', d => out += d.toString());
     child.stderr.on('data', d => out += d.toString());
-    child.on('close', () => resolve(out.trim() ? out : '(no output)'));
-    child.on('error', e => resolve(out.trim() ? out : (e.message || 'Command failed')));
+    child.on('close', () => {
+      currentChild = null;
+      resolve(out.trim() ? out : '(no output)');
+    });
+    child.on('error', e => {
+      currentChild = null;
+      resolve(out.trim() ? out : (e.message || 'Command failed'));
+    });
   });
+}
+
+export function abort() {
+  if (currentChild) {
+    currentChild.kill('SIGKILL');
+    currentChild = null;
+  }
 }

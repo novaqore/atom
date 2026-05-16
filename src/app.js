@@ -7,6 +7,7 @@ import { wake } from "./utils/wake.js";
 import { colors } from "./utils/theme.js";
 import { rl, mute_input, unmute_input, user_input } from "./helpers/input.js";
 import { addTokens } from "./utils/token_count.js";
+import { abort as abortShell } from "./tools/commands/shell.js";
 
 export default async function app() {
   let MAX_TOOL_CALLS = 20;
@@ -15,7 +16,10 @@ export default async function app() {
 
   let currentAbort = null;
   process.stdin.on('keypress', (_, key) => {
-    if (key?.name === 'escape' && currentAbort) currentAbort();
+    if (key?.name === 'escape') {
+      if (currentAbort) currentAbort();
+      abortShell();
+    }
   });
 
   let messages = [system_prompt];
