@@ -1,4 +1,6 @@
 import { spawn } from 'child_process';
+import { copyFileSync, mkdirSync, existsSync } from 'fs';
+import path from 'path';
 import { system } from '../../utils/system_details.js';
 
 export const definition = {
@@ -6,6 +8,8 @@ export const definition = {
   function: {
     name: "sed",
     description: `Edit a file in place using sed. Prefer this tool for ANY targeted file edit (substitutions, replacements, deletions). Do NOT rewrite a whole file when sed can do the edit.
+
+Before each edit, the original file is snapshotted to .atom/bak/ with the full path mirrored and a timestamp suffix. Edits are recoverable.
 
 Examples:
 - Change a value on a specific line: pass line_num + pattern + replacement
@@ -32,6 +36,15 @@ export const display = (args) => {
   return `${args.file}${loc} :: ${args.pattern} → ${args.replacement}`;
 };
 
+function snapshot(file) {
+  const absFile = path.resolve(file);
+  if (!existsSync(absFile)) return;
+  const rel = absFile.startsWith('/') ? absFile.slice(1) : absFile;
+  const backupPath = path.join('.atom', 'bak', `${rel}.${Date.now()}.bak`);
+  mkdirSync(path.dirname(backupPath), { recursive: true });
+  copyFileSync(absFile, backupPath);
+}
+
 let currentChild = null;
 
 export async function run(args) {
@@ -41,6 +54,13 @@ export async function run(args) {
     const lineSpec = line_num ? `${line_num}` : '';
     const flags = line_num ? '' : 'g';
     const sedExpr = `${lineSpec}s${delim}${pattern}${delim}${replacement}${delim}${flags}`;
+
+    try {
+      snapshot(file);
+    } catch (e) {
+      resolve(`Backup failed: ${e.message}`);
+      return;
+    }
 
     const isMac = system.platform === 'darwin';
     const sedArgs = isMac ? ['-i', '', sedExpr, file] : ['-i', sedExpr, file];

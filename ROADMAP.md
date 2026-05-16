@@ -20,6 +20,20 @@ The messages array grows every turn and eventually approaches the model's contex
 
 Each has trade-offs. Rolling is simple but loses context. Compressing keeps continuity but costs extra tokens and risks losing detail. Live injection is the leanest and most context-efficient but requires deciding what counts as "relevant" per turn. We will test all three and see which feels right in practice.
 
+### Edit history and rollback
+
+Every edit snapshots the original to a mirrored backup folder under `.atom/bak/` before writing. The full path is preserved no matter where the file lives, so `/var/log/something.conf` becomes `.atom/bak/var/log/something.conf.<timestamp>.bak` and `src/app.js` becomes `.atom/bak/src/app.js.<timestamp>.bak`. Timestamps stack so you get the full history.
+
+```
+.atom/
+  bak/
+    src/app.js.1714932154321.bak
+    src/app.js.1714932200195.bak
+    var/log/something.conf.1714932298077.bak
+```
+
+A new `roll_back` tool reads from this mirror and restores a file to its latest snapshot, lists available timestamps, or restores a specific one. The agent always knows where to look because the path is deterministic. Gives a real undo without requiring git. Retention policy (prune old backups) is a follow-up concern.
+
 ## Future
 
 Open for ideas.
