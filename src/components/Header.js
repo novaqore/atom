@@ -18,6 +18,7 @@ export default function header() {
     `RAM: ${system.totalMem}`,
     `Home: ${system.homedir}`,
     `Shell: ${system.shell}`,
+    `Bak: ${system.bakSize}B`,
     internalUrl && `${colors.yellow}Local:${colors.reset} ${colors.white}${internalUrl}${colors.reset}`,
   ].filter(Boolean).join('  •  ');
 

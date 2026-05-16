@@ -21,6 +21,7 @@ Python: ${system.python.version} / ${system.python.path}
 
 File Backups:
 Every sed edit automatically writes a backup to .atom/bak/ with the file's absolute path mirrored and a timestamp suffix. Editing /Users/x/y.txt creates .atom/bak/Users/x/y.txt.<timestamp>.bak.
+Current backup folder size: ${system.bakSize}B
 
 To recover a file, use the shell tool:
 - List versions of a file: ls -lt .atom/bak\${ABS_PATH}.*.bak
