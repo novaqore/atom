@@ -6,6 +6,7 @@ import header from "./components/header.js";
 import { wake } from "./utils/wake.js";
 import { colors } from "./utils/theme.js";
 import { rl, mute_input, unmute_input, user_input } from "./helpers/input.js";
+import { addTokens } from "./utils/token_count.js";
 
 export default async function app() {
   let MAX_TOOL_CALLS = 20;
@@ -57,6 +58,7 @@ export default async function app() {
         currentAbort = abort;
 
         for await (const chunk of stream) {
+          addTokens(chunk);
           const delta = chunk.choices[0]?.delta;
 
           if (delta?.content) {
