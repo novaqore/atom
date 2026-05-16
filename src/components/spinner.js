@@ -1,6 +1,6 @@
 import { colors } from '../utils/theme.js';
 
-const FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+const FRAMES = ['|', '/', '-', '\\'];
 
 class LoadingSpinner {
   #interval = null;
