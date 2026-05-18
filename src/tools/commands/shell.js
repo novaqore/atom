@@ -1,10 +1,8 @@
 import { spawn } from 'child_process';
-import { system } from '../../utils/system_details.js';
+import { shell, shellName } from '../../system/details/shell.js';
 import { spinner } from '../../components/spinner.js';
 import { colors } from '../../utils/theme.js';
 import { rl } from '../../helpers/input.js';
-
-const { shell, shellName } = system;
 
 export const definition = {
   type: "function",

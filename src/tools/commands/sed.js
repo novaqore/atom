@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 import { copyFileSync, mkdirSync, existsSync } from 'fs';
 import path from 'path';
-import { system } from '../../utils/system_details.js';
+import { platform } from '../../system/details/os.js';
 
 export const definition = {
   type: "function",
@@ -62,7 +62,7 @@ export async function run(args) {
       return;
     }
 
-    const isMac = system.platform === 'darwin';
+    const isMac = platform === 'darwin';
     const sedArgs = isMac ? ['-i', '', sedExpr, file] : ['-i', sedExpr, file];
 
     const child = spawn('sed', sedArgs, { stdio: 'pipe' });

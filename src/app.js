@@ -1,6 +1,6 @@
 import { chat } from "./lib/novaqore.js";
 import { tools, runTool, displayTool, processToolCall } from "./tools/run_tool.js";
-import { system_prompt } from "./utils/system_prompt.js";
+import { system_prompt } from "./system/prompt.js";
 import { spinner } from "./components/spinner.js";
 import header from "./components/header.js";
 import { wake } from "./utils/wake.js";
@@ -24,7 +24,7 @@ export default async function app() {
   });
 
   let messages = [system_prompt];
-  console.log(messages)
+
   mute_input(); 
   await wake();
   unmute_input();

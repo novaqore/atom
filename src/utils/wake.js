@@ -1,5 +1,5 @@
 import { chat } from "../lib/novaqore.js";
-import { system_prompt } from "./system_prompt.js";
+import { system_prompt } from "../system/prompt.js";
 import { spinner } from "../components/spinner.js";
 import { colors } from "./theme.js";
 

@@ -38,6 +38,24 @@ Only two on purpose. There is no `write_file` tool, so the model is biased towar
 
 When a shell command needs input (ssh, `read`, `npm init`, password prompts), your terminal is handed to the child process. You type, the child reads, the agent waits. When the child exits, the agent picks back up with the captured output. You can ssh into another machine through Atom and run commands there in full interactive mode.
 
+### SSH hosts
+
+On startup Atom reads `~/.ssh/config` and exposes every `Host` block (skipping wildcards) to the model. For each host it builds the actual ssh command — including `-i <IdentityFile>` and `-p <Port>` when present — and lists them in the system prompt as:
+
+```
+- unit-1: ssh -i ~/.ssh/id_unit1 admin@192.168.1.10
+- unit-2: ssh deploy@10.0.0.1
+- prod-db: ssh -i ~/.ssh/id_prod -p 2222 admin@db.example.com
+```
+
+That means you can say things like:
+
+- **"check disk usage on the main_frame"** — the model runs the matching ssh command, captures `df -h`, and reports back
+- **"pull up a terminal on prod-db"** — Atom hands you a full interactive session on that box
+- **"sync the config from box-1 to box-2"** — the model chains ssh + scp using the right keys
+
+Hosts that don't have an IdentityFile will prompt for a password through your terminal. Anything you put in `~/.ssh/config` is what the model knows about.
+
 ### Abort
 
 Press ESC at any time to kill both the LLM stream and any running shell command. Instant. The LLM call is torn down via AbortController, the child process via SIGKILL.

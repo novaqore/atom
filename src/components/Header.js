@@ -1,8 +1,9 @@
+import os from 'os';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { colors } from '../utils/theme.js';
-import { system } from '../utils/system_details.js';
+import { backup } from '../system/details/backup.js';
 import { internalUrl } from '../lib/novaqore.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -13,12 +14,12 @@ export default function header() {
 
   const info = [
     `${colors.cyan}Atom${colors.reset} ${colors.white}v${version}${colors.reset}`,
-    `${system.platform} (${system.arch})`,
-    `CPUs: ${system.cpuCount}`,
-    `RAM: ${system.totalMem}`,
-    `Home: ${system.homedir}`,
-    `Shell: ${system.shell}`,
-    `Bak: ${system.bakSize}B`,
+    `${os.platform()} (${os.arch()})`,
+    `CPUs: ${os.cpus().length}`,
+    `RAM: ${(os.totalmem() / (1024 ** 3)).toFixed(1)}GB`,
+    `Home: ${os.homedir()}`,
+    `Shell: ${process.env.SHELL || process.env.COMSPEC || 'unknown'}`,
+    `Bak: ${backup}`,
     internalUrl && `${colors.yellow}Local:${colors.reset} ${colors.white}${internalUrl}${colors.reset}`,
   ].filter(Boolean).join('  •  ');
 
