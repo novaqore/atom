@@ -8,8 +8,9 @@ import { colors } from "./utils/theme.js";
 import { rl, mute_input, unmute_input, user_input } from "./helpers/input.js";
 import { addTokens } from "./utils/token_count.js";
 import { abort as abortShell } from "./tools/commands/shell.js";
+import { loadEnv } from "./utils/env.js";
 
-const MAX_TOOL_CALLS = 20;
+const MAX_TOOL_CALLS = 50;
 
 export default async function app() {
   console.clear()
@@ -58,7 +59,7 @@ export default async function app() {
       let working = false;
 
       try {
-        const { stream, abort } = await chat({ messages, tools });
+        const { stream, abort } = await chat({ messages, tools, model: (loadEnv()?.MODEL) || "qwen3.6-27b" });
         currentAbort = abort;
 
         for await (const chunk of stream) {

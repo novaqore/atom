@@ -25,14 +25,9 @@ atom
 
 ## How it works
 
-### Two tools, by design
+### Agent capabilities
 
-Atom ships with exactly two tools:
-
-- **shell** auto-named after your actual shell (`zsh`, `bash`, `powershell`)
-- **sed** for surgical file edits
-
-Only two on purpose. There is no `write_file` tool, so the model is biased toward sed for any edit. Full rewrites are still possible through shell heredoc but slightly awkward, which is the feature.
+The agent can run shell commands and edit files in place.
 
 ### Interactive shell
 
@@ -95,3 +90,4 @@ Atom runs on the NovaQore AI infrastructure.
 ## License
 
 MIT © NovaQore LLC. See [LICENSE](LICENSE).
+

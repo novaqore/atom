@@ -21,7 +21,7 @@ const formatBytes = (b) => {
 
 export const backup = formatBytes(dirSize('.atom/bak'));
 
-export const prompt = `Access your file Backups: Every sed edit automatically writes a backup to your .atom/bak/ with the file's absolute path mirrored and a timestamp suffix. Editing /Users/x/y.txt creates .atom/bak/Users/x/y.txt.<timestamp>.bak.
+export const prompt = `Access your file Backups: Every sed and write operation automatically writes a backup to your .atom/bak/ with the file's absolute path mirrored and a timestamp suffix. Editing /Users/x/y.txt creates .atom/bak/Users/x/y.txt.<timestamp>.bak.
 Current backup folder size: ${backup}
 To recover a file, use the shell tool:
 - List versions of a file: ls -lt .atom/bak\${ABS_PATH}.*.bak

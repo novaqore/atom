@@ -11,6 +11,7 @@ const pkg = JSON.parse(readFileSync(join(__dirname, 'package.json'), 'utf8'));
 
 const KEY_MAP = {
   base_url: 'NOVAQORE_INTERNAL_URL',
+  model: 'MODEL',
 };
 
 function resolveKey(key) {

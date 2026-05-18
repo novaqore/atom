@@ -9,7 +9,7 @@ export const definition = {
   type: "function",
   function: {
     name: "sed",
-    description: `Edit a file in place using sed. Prefer this tool for ANY targeted file edit (substitutions, replacements, deletions). Do NOT rewrite a whole file when sed can do the edit.
+    description: `Edit a file in place using sed. Use this for targeted edits: substitutions, replacements, deletions, fixing typos, changing values on specific lines. For new files, full rewrites, or large content blocks, use the write tool instead.
 
 Before each edit, the original file is snapshotted to .atom/bak/ with the full path mirrored and a timestamp suffix. Edits are recoverable.
 
