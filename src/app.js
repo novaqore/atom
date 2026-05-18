@@ -24,7 +24,7 @@ export default async function app() {
   });
 
   let messages = [system_prompt];
-
+  console.log(messages)
   mute_input(); 
   await wake();
   unmute_input();
