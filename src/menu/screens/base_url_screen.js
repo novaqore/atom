@@ -1,4 +1,4 @@
-import { menu } from '../../helpers/menu.js';
+import { menu } from '../navigation.js';
 import { mute_input, unmute_input, rl } from '../../helpers/input.js';
 import header from '../../components/header.js';
 import { loadEnv, saveEnv, saveToShellEnv } from '../../utils/env.js';

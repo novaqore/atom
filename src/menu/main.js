@@ -1,4 +1,4 @@
-import { menu } from '../helpers/menu.js';
+import { menu } from './navigation.js';
 import { mute_input, unmute_input } from '../helpers/input.js';
 import header from '../components/header.js';
 import { colors } from '../utils/theme.js';
