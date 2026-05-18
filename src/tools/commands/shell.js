@@ -26,9 +26,8 @@ export const display = (args) => args.command;
 
 let currentChild = null;
 
-export async function run(args) {
+export async function run(args, working = false) {
   return new Promise((resolve) => {
-    spinner.stop();
     rl.pause();
 
     const savedDataListeners = process.stdin.listeners('data');
@@ -36,11 +35,16 @@ export async function run(args) {
     process.stdin.pause();
     if (process.stdin.isTTY) process.stdin.setRawMode(false);
 
+    // Idle-timeout: if no output within 500ms, stop spinner so TTY prompts (ssh password, sudo, read) can appear cleanly
+    const idleTimer = working ? setTimeout(() => spinner.stop(), 500) : null;
+
     const child = spawn(args.command, { shell, stdio: ['inherit', 'pipe', 'pipe'] });
     currentChild = child;
     let out = '';
 
     const onData = (d) => {
+      if (idleTimer) clearTimeout(idleTimer);
+      spinner.stop();
       const text = d.toString();
       out += text;
       process.stdout.write(`${colors.green}${text}${colors.reset}`);
@@ -51,12 +55,15 @@ export async function run(args) {
 
     const finish = (fallback) => {
       currentChild = null;
+      if (idleTimer) clearTimeout(idleTimer);
+      spinner.stop();
       if (process.stdin.isTTY) process.stdin.setRawMode(true);
       savedDataListeners.forEach((l) => process.stdin.on('data', l));
       process.stdin.resume();
       rl.resume();
       if (out && !out.endsWith('\n')) process.stdout.write('\n');
       if (!out.trim()) process.stdout.write(`${colors.green}${fallback}${colors.reset}\n`);
+      if (working) spinner.start('Working...', 'yellow');
       resolve(out.trim() ? out : fallback);
     };
 

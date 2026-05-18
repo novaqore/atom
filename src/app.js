@@ -55,7 +55,7 @@ export default async function app() {
       spinner.start('Thinking...', 'cyan');
       let aborted = false;
       let errored = null;
-      let workingStarted = false;
+      let working = false;
 
       try {
         const { stream, abort } = await chat({ messages, tools });
@@ -72,10 +72,10 @@ export default async function app() {
           }
 
           if (delta?.tool_calls) {
-            if (!workingStarted) {
+            if (!working) {
               spinner.stop();
               spinner.start('Working...', 'yellow');
-              workingStarted = true;
+              working = true;
             }
             processToolCall(assistantToolCalls, delta);
           }
@@ -129,7 +129,7 @@ export default async function app() {
 
         spinner.stop();
         process.stdout.write(`\r\x1b[2K${colors.yellow}${name}${colors.reset} ${displayTool(name, args)}\n`);
-        result = await runTool(name, args, workingStarted);
+        result = await runTool(name, args, working);
         messages.push({ tool_call_id: tc.id, role: "tool", content: result });
       }
     }

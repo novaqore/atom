@@ -1,7 +1,6 @@
 import { readdirSync } from 'fs';
 import { fileURLToPath, pathToFileURL } from 'url';
 import path from 'path';
-import { spinner } from '../components/spinner.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const commandsDir = path.join(__dirname, 'commands');
@@ -25,12 +24,10 @@ export function displayTool(name, args) {
   return fn ? fn(args) : JSON.stringify(args);
 }
 
-export async function runTool(name, args, workingStarted = false) {
+export async function runTool(name, args, working = false) {
   const handler = handlers[name];
   if (!handler) return `Error: Unknown tool "${name}"`;
-  const result = await handler(args);
-  if (workingStarted) spinner.start('Working...', 'yellow');
-  return result;
+  return handler(args, working);
 }
 
 export function processToolCall(toolCalls, delta) {

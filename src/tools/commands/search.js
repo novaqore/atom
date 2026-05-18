@@ -1,3 +1,6 @@
+import { spinner } from '../../components/spinner.js';
+import { colors } from '../../utils/theme.js';
+
 export const definition = {
   type: "function",
   function: {
@@ -60,9 +63,16 @@ function buildUrl(args) {
   return `https://html.duckduckgo.com/html/?${params.toString()}`;
 }
 
-export async function run(args) {
+export async function run(args, working = false) {
   const max = Math.min(args.max_results || 5, 20);
   const url = buildUrl(args);
+
+  const finish = (result) => {
+    spinner.stop();
+    process.stdout.write(`${colors.grey}${result}${colors.reset}\n`);
+    if (working) spinner.start('Working...', 'yellow');
+    return result;
+  };
 
   controller = new AbortController();
   try {
@@ -74,15 +84,15 @@ export async function run(args) {
     controller = null;
 
     const results = parse(html, max);
-    if (!results.length) return 'No results found.';
+    if (!results.length) return finish('No results found.');
 
-    return results.map((r, i) =>
+    return finish(results.map((r, i) =>
       `${i + 1}. ${r.title}\n   ${r.url}\n   ${r.snippet}`
-    ).join('\n\n');
+    ).join('\n\n'));
   } catch (err) {
     controller = null;
-    if (err.name === 'AbortError') return 'Search aborted';
-    return `Search failed: ${err.message}`;
+    if (err.name === 'AbortError') return finish('Search aborted');
+    return finish(`Search failed: ${err.message}`);
   }
 }
 

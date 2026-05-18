@@ -2,6 +2,8 @@ import { spawn } from 'child_process';
 import { copyFileSync, mkdirSync, existsSync } from 'fs';
 import path from 'path';
 import { platform } from '../../system/details/os.js';
+import { spinner } from '../../components/spinner.js';
+import { colors } from '../../utils/theme.js';
 
 export const definition = {
   type: "function",
@@ -47,7 +49,7 @@ function snapshot(file) {
 
 let currentChild = null;
 
-export async function run(args) {
+export async function run(args, working = false) {
   return new Promise((resolve) => {
     const { file, pattern, replacement, line_num } = args;
     const delim = args.delimiter || '/';
@@ -55,10 +57,17 @@ export async function run(args) {
     const flags = line_num ? '' : 'g';
     const sedExpr = `${lineSpec}s${delim}${pattern}${delim}${replacement}${delim}${flags}`;
 
+    const finish = (result) => {
+      spinner.stop();
+      process.stdout.write(`${colors.grey}${result}${colors.reset}\n`);
+      if (working) spinner.start('Working...', 'yellow');
+      resolve(result);
+    };
+
     try {
       snapshot(file);
     } catch (e) {
-      resolve(`Backup failed: ${e.message}`);
+      finish(`Backup failed: ${e.message}`);
       return;
     }
 
@@ -73,15 +82,11 @@ export async function run(args) {
 
     child.on('close', (code) => {
       currentChild = null;
-      if (code !== 0) {
-        resolve(out.trim() || `sed exited with code ${code}`);
-      } else {
-        resolve(out.trim() || `Edited ${file}`);
-      }
+      finish(code !== 0 ? (out.trim() || `sed exited with code ${code}`) : (out.trim() || `Edited ${file}`));
     });
     child.on('error', e => {
       currentChild = null;
-      resolve(e.message || 'sed failed');
+      finish(e.message || 'sed failed');
     });
   });
 }
