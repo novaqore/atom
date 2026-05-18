@@ -21,3 +21,24 @@ export function saveEnv(env) {
   const content = Object.entries(env).map(([k, v]) => `${k}=${v}`).join('\n') + '\n';
   fs.writeFileSync(envPath, content);
 }
+
+function shellEnvFile() {
+  const shell = process.env.SHELL || '';
+  if (shell.includes('zsh')) return path.join(homedir(), '.zshenv');
+  if (shell.includes('bash')) return path.join(homedir(), '.bashrc');
+  return null;
+}
+
+export function saveToShellEnv(key, value) {
+  const file = shellEnvFile();
+  if (!file) return false;
+  let content = fs.existsSync(file) ? fs.readFileSync(file, 'utf-8') : '';
+  const line = `export ${key}=${value}`;
+  const pattern = new RegExp(`^export ${key}=.*$`, 'm');
+  content = pattern.test(content)
+    ? content.replace(pattern, line)
+    : content.replace(/\n*$/, '') + `\n${line}\n`;
+  fs.writeFileSync(file, content);
+  process.env[key] = value;
+  return true;
+}
