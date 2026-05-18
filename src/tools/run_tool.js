@@ -25,13 +25,11 @@ export function displayTool(name, args) {
   return fn ? fn(args) : JSON.stringify(args);
 }
 
-export async function runTool(name, args) {
+export async function runTool(name, args, workingStarted = false) {
   const handler = handlers[name];
   if (!handler) return `Error: Unknown tool "${name}"`;
-
-  spinner.start('Working...', 'yellow');
   const result = await handler(args);
-  spinner.start('Working...', 'yellow');
+  if (workingStarted) spinner.start('Working...', 'yellow');
   return result;
 }
 

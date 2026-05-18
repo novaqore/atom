@@ -129,7 +129,7 @@ export default async function app() {
 
         spinner.stop();
         process.stdout.write(`\r\x1b[2K${colors.yellow}${name}${colors.reset} ${displayTool(name, args)}\n`);
-        result = await runTool(name, args);
+        result = await runTool(name, args, workingStarted);
         messages.push({ tool_call_id: tc.id, role: "tool", content: result });
       }
     }
