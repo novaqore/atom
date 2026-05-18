@@ -32,6 +32,9 @@ export async function run(args) {
   return new Promise((resolve) => {
     spinner.stop();
     rl.pause();
+
+    const savedDataListeners = process.stdin.listeners('data');
+    process.stdin.removeAllListeners('data');
     process.stdin.pause();
     if (process.stdin.isTTY) process.stdin.setRawMode(false);
 
@@ -51,6 +54,7 @@ export async function run(args) {
     const finish = (fallback) => {
       currentChild = null;
       if (process.stdin.isTTY) process.stdin.setRawMode(true);
+      savedDataListeners.forEach((l) => process.stdin.on('data', l));
       process.stdin.resume();
       rl.resume();
       if (out && !out.endsWith('\n')) process.stdout.write('\n');
