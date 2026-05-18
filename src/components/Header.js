@@ -1,18 +1,16 @@
 import os from 'os';
-import { readFileSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
 import { colors } from '../utils/theme.js';
 import { internalUrl } from '../lib/novaqore.js';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
+import { current, hasUpdate } from '../system/details/version.js';
 
 export default function header() {
-  const packageJson = JSON.parse(readFileSync(join(__dirname, '../..', 'package.json'), 'utf8'));
-  const version = packageJson.version || '0.0.0';
+  const versionColor = hasUpdate ? colors.red : colors.white;
+  const versionLabel = hasUpdate
+    ? `${versionColor}v${current} update${colors.reset}`
+    : `${versionColor}v${current}${colors.reset}`;
 
   const info = [
-    `${colors.cyan}Atom${colors.reset} ${colors.white}v${version}${colors.reset}`,
+    `${colors.cyan}Atom${colors.reset} ${versionLabel}`,
     `${os.platform()} (${os.arch()})`,
     `CPUs: ${os.cpus().length}`,
     `RAM: ${(os.totalmem() / (1024 ** 3)).toFixed(1)}GB`,
