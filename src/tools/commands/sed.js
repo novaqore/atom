@@ -1,5 +1,5 @@
 import { spawn } from 'child_process';
-import { copyFileSync, mkdirSync, existsSync } from 'fs';
+import { copyFileSync, mkdirSync, existsSync, readFileSync } from 'fs';
 import path from 'path';
 import { platform } from '../../system/details/os.js';
 import { spinner } from '../../components/spinner.js';
@@ -18,15 +18,21 @@ Examples:
 - Replace all matches in a file: pass pattern + replacement only
 - Fix a typo, update an import path, bump a version string
 
-Pattern is a sed regex. If pattern or replacement contains '/', set delimiter to a safe char like '|' or '#'.`,
+By default 'pattern' is treated as a literal string — regex metacharacters (. * [ ] \\) are escaped automatically, and the delimiter is auto-picked to avoid conflicts. Anchors are an exception: if pattern starts with ^ or ends with $, regex mode is enabled automatically so the anchors work as line anchors. Set regex: true to force regex mode for other BRE features, or regex: false to force literal mode (including literal ^/$).
+
+Always prefer line_num when the same substring may appear elsewhere in the file — it scopes the edit and makes accidental over-matching impossible.
+
+Sed is line-oriented: the pattern itself cannot span multiple lines (the replacement, however, may contain \\n and will insert new lines). For multi-line block matches, use the write tool.
+
+If the pattern matches nothing the tool reports "no matches" and the file is left unchanged — re-check the exact text (literal mode is whitespace-, case-, and quote-sensitive) or try regex: true.`,
     parameters: {
       type: "object",
       properties: {
         file: { type: "string", description: "Path to the file to edit" },
-        pattern: { type: "string", description: "Sed regex pattern to match" },
-        replacement: { type: "string", description: "Text to substitute in" },
-        line_num: { type: "integer", description: "Optional. Restrict edit to this single line number." },
-        delimiter: { type: "string", description: "Optional. Defaults to '/'. Use a different char if pattern or replacement contains /." }
+        pattern: { type: "string", description: "Literal string to match (or sed BRE if regex: true)" },
+        replacement: { type: "string", description: "Text to substitute in (literal — & and \\ are escaped automatically)" },
+        line_num: { type: "integer", description: "Optional. Restrict edit to this single line number. Strongly recommended when the pattern is not unique in the file." },
+        regex: { type: "boolean", description: "Optional. Force regex mode (true) or literal mode (false). If omitted, regex is auto-enabled when pattern starts with ^ or ends with $; otherwise literal." }
       },
       required: ["file", "pattern", "replacement"]
     }
@@ -49,13 +55,35 @@ function snapshot(file) {
 
 let currentChild = null;
 
+function pickDelimiter(...strings) {
+  const candidates = ['/', '|', '#', '@', '%', ',', ';', '!', '~', '\x01'];
+  for (const c of candidates) {
+    if (strings.every(s => !s.includes(c))) return c;
+  }
+  return '\x01';
+}
+
+function escapeBRE(s, delim) {
+  let out = s.replace(/[\\.*[\]^$]/g, '\\$&');
+  if (delim && delim !== '\x01') out = out.split(delim).join('\\' + delim);
+  return out;
+}
+
+function escapeReplacement(s, delim) {
+  let out = s.replace(/[\\&]/g, '\\$&');
+  if (delim && delim !== '\x01') out = out.split(delim).join('\\' + delim);
+  return out.replace(/\n/g, '\\\n');
+}
+
+function looksLikeRegex(pattern) {
+  return pattern.startsWith('^') || (pattern.endsWith('$') && !pattern.endsWith('\\$'));
+}
+
 export async function run(args, working = false) {
   return new Promise((resolve) => {
-    const { file, pattern, replacement, line_num } = args;
-    const delim = args.delimiter || '/';
-    const lineSpec = line_num ? `${line_num}` : '';
-    const flags = line_num ? '' : 'g';
-    const sedExpr = `${lineSpec}s${delim}${pattern}${delim}${replacement}${delim}${flags}`;
+    const { file, line_num } = args;
+    const isRegex = args.regex === true
+      || (args.regex !== false && looksLikeRegex(args.pattern));
 
     const finish = (result) => {
       spinner.stop();
@@ -64,7 +92,21 @@ export async function run(args, working = false) {
       resolve(result);
     };
 
+    if (!existsSync(file)) {
+      finish(`File not found: ${file}`);
+      return;
+    }
+
+    const delim = pickDelimiter(args.pattern, args.replacement);
+    const pattern = isRegex ? args.pattern : escapeBRE(args.pattern, delim);
+    const replacement = escapeReplacement(args.replacement, delim);
+    const lineSpec = line_num ? `${line_num}` : '';
+    const flags = line_num ? '' : 'g';
+    const sedExpr = `${lineSpec}s${delim}${pattern}${delim}${replacement}${delim}${flags}`;
+
+    let before;
     try {
+      before = readFileSync(file);
       snapshot(file);
     } catch (e) {
       finish(`Backup failed: ${e.message}`);
@@ -82,7 +124,25 @@ export async function run(args, working = false) {
 
     child.on('close', (code) => {
       currentChild = null;
-      finish(code !== 0 ? (out.trim() || `sed exited with code ${code}`) : (out.trim() || `Edited ${file}`));
+      if (code !== 0) {
+        let msg = out.trim() || `sed exited with code ${code}`;
+        if (args.pattern.includes('\n')) {
+          msg += ` — pattern contains a newline; sed cannot match across lines. Use the write tool for multi-line block edits.`;
+        }
+        finish(msg);
+        return;
+      }
+      try {
+        const after = readFileSync(file);
+        if (before.equals(after)) {
+          const hint = isRegex
+            ? ` (regex mode was ${args.regex === true ? 'forced via regex: true' : 'auto-enabled because pattern uses anchors'})`
+            : ` Set regex: true if the pattern needs sed BRE features.`;
+          finish(`No matches for pattern in ${file} — file unchanged. Verify the exact text (whitespace, quotes, and case must match).${hint}`);
+          return;
+        }
+      } catch {}
+      finish(out.trim() || `Edited ${file}`);
     });
     child.on('error', e => {
       currentChild = null;

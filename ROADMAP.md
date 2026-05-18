@@ -24,6 +24,10 @@ The messages array grows every turn and eventually approaches the model's contex
 
 Each has trade-offs. Rolling is simple but loses context. Compressing keeps continuity but costs extra tokens and risks losing detail. Live injection is the leanest and most context-efficient but requires deciding what counts as "relevant" per turn. We will test all three and see which feels right in practice.
 
+### Pulse (scheduled agent execution)
+
+A cron-style "Pulse" that triggers the agent on a configurable time loop, running autonomously without an active chat session. The Pulse will be integrated directly into the chat TUI so it can be started, stopped, and reconfigured at any time from the interface.
+
 ## Future
 
 Open for ideas.
