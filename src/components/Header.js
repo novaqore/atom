@@ -3,7 +3,6 @@ import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { colors } from '../utils/theme.js';
-import { backup } from '../system/details/backup.js';
 import { internalUrl } from '../lib/novaqore.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -19,7 +18,6 @@ export default function header() {
     `RAM: ${(os.totalmem() / (1024 ** 3)).toFixed(1)}GB`,
     `Home: ${os.homedir()}`,
     `Shell: ${process.env.SHELL || process.env.COMSPEC || 'unknown'}`,
-    `Bak: ${backup}`,
     internalUrl && `${colors.yellow}Local:${colors.reset} ${colors.white}${internalUrl}${colors.reset}`,
   ].filter(Boolean).join('  •  ');
 

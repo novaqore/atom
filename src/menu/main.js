@@ -2,7 +2,7 @@ import { menu } from '../helpers/menu.js';
 import { mute_input, unmute_input } from '../helpers/input.js';
 import header from '../components/header.js';
 import { colors } from '../utils/theme.js';
-import { settingsScreen } from './screens/settings.js';
+import { settingsScreen } from './screens/settings_screen.js';
 import app from '../app.js';
 
 const intro = [

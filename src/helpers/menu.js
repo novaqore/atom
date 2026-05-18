@@ -13,8 +13,12 @@ export function menu(question, options) {
       if (drawn) process.stdout.write(`\x1b[${options.length}A`);
       options.forEach((opt, i) => {
         const isSel = i === selected;
-        const marker = isSel ? `${colors.cyan}▶${colors.reset}` : ' ';
-        const text = isSel ? `${colors.cyan}${opt}${colors.reset}` : `${colors.grey}${opt}${colors.reset}`;
+        const isBack = opt === 'Back';
+        const color = isSel ? colors.cyan : colors.grey;
+        const marker = isBack
+          ? `${color}←${colors.reset}`
+          : (isSel ? `${colors.cyan}▶${colors.reset}` : ' ');
+        const text = `${color}${opt}${colors.reset}`;
         process.stdout.write(`\x1b[2K\r${marker} ${text}\n`);
       });
       drawn = true;
