@@ -55,6 +55,7 @@ export default async function app() {
       spinner.start('Thinking...', 'cyan');
       let aborted = false;
       let errored = null;
+      let workingStarted = false;
 
       try {
         const { stream, abort } = await chat({ messages, tools });
@@ -71,6 +72,11 @@ export default async function app() {
           }
 
           if (delta?.tool_calls) {
+            if (!workingStarted) {
+              spinner.stop();
+              spinner.start('Working...', 'yellow');
+              workingStarted = true;
+            }
             processToolCall(assistantToolCalls, delta);
           }
         }
