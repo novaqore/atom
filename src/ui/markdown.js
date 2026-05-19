@@ -1,4 +1,4 @@
-import { colors } from "../utils/theme.js";
+import { colors } from "./theme.js";
 
 const BOLD_ON = '\x1b[1m';
 const BOLD_OFF = '\x1b[22m';

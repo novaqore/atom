@@ -1,7 +1,8 @@
-import { copyFileSync, mkdirSync, existsSync, writeFileSync } from 'fs';
+import { writeFileSync } from 'fs';
 import path from 'path';
-import { spinner } from '../../components/spinner.js';
-import { colors } from '../../utils/theme.js';
+import { spinner } from '../../ui/spinner.js';
+import { snapshot } from '../../config/file_backup.js';
+import { colors } from '../../ui/theme.js';
 
 export const definition = {
   type: "function",
@@ -34,14 +35,6 @@ export const display = (args) => {
   return `${args.file} (${lines} lines)`;
 };
 
-function snapshot(file) {
-  const absFile = path.resolve(file);
-  if (!existsSync(absFile)) return;
-  const rel = absFile.startsWith('/') ? absFile.slice(1) : absFile;
-  const backupPath = path.join('.atom', 'bak', `${rel}.${Date.now()}.bak`);
-  mkdirSync(path.dirname(backupPath), { recursive: true });
-  copyFileSync(absFile, backupPath);
-}
 
 export async function run(args, working = false) {
   return new Promise((resolve) => {

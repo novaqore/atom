@@ -1,24 +1,30 @@
 import { menu } from '../navigation.js';
-import { mute_input, unmute_input } from '../../helpers/input.js';
-import header from '../../components/header.js';
+import { mute_input, unmute_input } from '../../ui/input.js';
+import header from '../../ui/header.js';
 import { baseUrlScreen } from './base_url_screen.js';
 import { modelScreen } from './model_screen.js';
 import { toolsScreen } from './tools_screen.js';
 import { sshHostsScreen } from './ssh_hosts_screen.js';
 import { backupScreen } from './backup_screen.js';
 
+const screens = {
+  'Base URL': baseUrlScreen,
+  'Model': modelScreen,
+  'Tools': toolsScreen,
+  'SSH Hosts': sshHostsScreen,
+  'Backup': backupScreen,
+};
+
 export async function settingsScreen() {
   while (true) {
     console.clear();
-    header();
+    await header();
     mute_input();
-    const choice = await menu('Settings', ['Base URL', 'Model', 'Tools', 'SSH Hosts', 'Backup', 'Back']);
+    const choice = await menu('Settings', Object.keys(screens).concat('Back'));
     unmute_input();
     if (choice === 'Back' || choice === null) return;
-    if (choice === 'Base URL') await baseUrlScreen();
-    else if (choice === 'Model') await modelScreen();
-    else if (choice === 'Tools') await toolsScreen();
-    else if (choice === 'SSH Hosts') await sshHostsScreen();
-    else if (choice === 'Backup') await backupScreen();
+    const handler = screens[choice];
+    if (handler) await handler();
   }
 }
+

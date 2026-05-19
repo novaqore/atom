@@ -1,5 +1,5 @@
-import { spinner } from '../../components/spinner.js';
-import { colors } from '../../utils/theme.js';
+import { spinner } from '../../ui/spinner.js';
+import { colors } from '../../ui/theme.js';
 
 export const definition = {
   type: "function",

@@ -1,7 +1,7 @@
 import { menu } from './navigation.js';
-import { mute_input, unmute_input } from '../helpers/input.js';
-import header from '../components/header.js';
-import { colors } from '../utils/theme.js';
+import { mute_input, unmute_input } from '../ui/input.js';
+import header from '../ui/header.js';
+import { colors } from '../ui/theme.js';
 import { settingsScreen } from './screens/settings_screen.js';
 import app from '../app.js';
 
@@ -15,7 +15,7 @@ const intro = [
 export async function mainMenu() {
   while (true) {
     console.clear();
-    header();
+    await header();
     mute_input();
     const choice = await menu(intro, ['Chat', 'Settings', 'Exit']);
     unmute_input();

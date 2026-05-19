@@ -1,5 +1,5 @@
 import { colors } from "./theme.js";
-import { spinner } from "../components/spinner.js";
+import { spinner } from "./spinner.js";
 
 const CONTEXT_SIZE = 262144;
 
@@ -14,3 +14,13 @@ export function addTokens(chunk) {
   spinner.stop();
   process.stdout.write(`\r\n${colors.grey}[tokens] in: ${total_in}  out: ${total_out}  total: ${total}/${CONTEXT_SIZE}${colors.reset}\r\n`);
 }
+
+export function resetTokens() {
+  total_in = 0;
+  total_out = 0;
+}
+
+export function getTokenCounts() {
+  return { in: total_in, out: total_out, total: total_in + total_out };
+}
+

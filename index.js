@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { Command } from 'commander';
 import { mainMenu } from "./src/menu/main.js";
-import { loadEnv, saveEnv } from "./src/utils/env.js";
+import { loadEnv, saveEnv } from "./src/config/env.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(join(__dirname, 'package.json'), 'utf8'));

@@ -1,21 +1,21 @@
 import { chat } from "./lib/novaqore.js";
 import { tools, runTool, displayTool, processToolCall } from "./tools/run_tool.js";
 import { system_prompt } from "./system/prompt.js";
-import { spinner } from "./components/spinner.js";
-import header from "./components/header.js";
-import { wake } from "./utils/wake.js";
-import { colors } from "./utils/theme.js";
-import { rl, mute_input, unmute_input, user_input } from "./helpers/input.js";
-import { addTokens } from "./utils/token_count.js";
-import { parseMarkdown } from "./helpers/markdown.js";
+import { spinner } from "./ui/spinner.js";
+import header from "./ui/header.js";
+import { wake } from "./system/wake.js";
+import { colors } from "./ui/theme.js";
+import { rl, mute_input, unmute_input, user_input } from "./ui/input.js";
+import { addTokens } from "./ui/token_count.js";
+import { parseMarkdown } from "./ui/markdown.js";
 import { abort as abortShell } from "./tools/commands/shell.js";
-import { loadEnv } from "./utils/env.js";
+import { loadEnv } from "./config/env.js";
 
 const MAX_TOOL_CALLS = 50;
 
 export default async function app() {
   console.clear()
-  header()
+  await header()
 
   let currentAbort = null;
   process.stdin.on('keypress', (_, key) => {

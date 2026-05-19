@@ -1,9 +1,10 @@
 import { spawn } from 'child_process';
-import { copyFileSync, mkdirSync, existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import path from 'path';
 import { platform } from '../../system/details/os.js';
-import { spinner } from '../../components/spinner.js';
-import { colors } from '../../utils/theme.js';
+import { spinner } from '../../ui/spinner.js';
+import { snapshot } from '../../config/file_backup.js';
+import { colors } from '../../ui/theme.js';
 
 export const definition = {
   type: "function",
@@ -44,14 +45,6 @@ export const display = (args) => {
   return `${args.file}${loc} :: ${args.pattern} → ${args.replacement}`;
 };
 
-function snapshot(file) {
-  const absFile = path.resolve(file);
-  if (!existsSync(absFile)) return;
-  const rel = absFile.startsWith('/') ? absFile.slice(1) : absFile;
-  const backupPath = path.join('.atom', 'bak', `${rel}.${Date.now()}.bak`);
-  mkdirSync(path.dirname(backupPath), { recursive: true });
-  copyFileSync(absFile, backupPath);
-}
 
 let currentChild = null;
 

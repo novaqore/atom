@@ -1,7 +1,7 @@
 import { chat } from "../lib/novaqore.js";
-import { system_prompt } from "../system/prompt.js";
-import { spinner } from "../components/spinner.js";
-import { colors } from "./theme.js";
+import { system_prompt } from "./prompt.js";
+import { spinner } from "../ui/spinner.js";
+import { colors } from "../ui/theme.js";
 
 const WAKE_PROMPT = "Greet the user with a short greeting.";
 

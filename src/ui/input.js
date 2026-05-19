@@ -1,5 +1,5 @@
 import readline from 'readline';
-import { colors } from '../utils/theme.js';
+import { colors } from "./theme.js";
 
 let _rl = null;
 let _origWrite = null;
@@ -16,9 +16,6 @@ function ensureRl() {
   return _rl;
 }
 
-// Export a readline.Interface-compatible object that lazy-initializes.
-// app.js iterates `for await (const line of rl)` — Symbol.asyncIterator is
-// inherited from the prototype so we just need to delegate.
 export const rl = {
   [Symbol.asyncIterator]() {
     return ensureRl()[Symbol.asyncIterator]();
@@ -38,6 +35,23 @@ export function mute_input() {
 }
 export function unmute_input() {
   if (_rl && _origWrite) _rl._ttyWrite = _origWrite;
+}
+
+export function prompt(question) {
+  return new Promise((resolve) => {
+    let escaped = false;
+    const onKey = (_, key) => {
+      if (key?.name === 'escape' && !escaped) {
+        escaped = true;
+        process.stdin.emit('keypress', '\r', { name: 'return', sequence: '\r' });
+      }
+    };
+    process.stdin.on('keypress', onKey);
+    rl.question(`${question} `, (answer) => {
+      process.stdin.off('keypress', onKey);
+      resolve(escaped ? null : answer.trim());
+    });
+  });
 }
 
 export function user_input() {

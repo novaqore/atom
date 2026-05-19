@@ -1,6 +1,6 @@
-import { colors } from '../utils/theme.js';
+import { colors } from "./theme.js";
 
-const FRAMES = ['|', '/', '-', '\\'];
+const FRAMES = ['⋅⚛ ', '·⚛⋅', ' ⚛⋅', '·⚛·'];
 
 class LoadingSpinner {
   #interval = null;
@@ -31,7 +31,7 @@ class LoadingSpinner {
     this.#startTime = Date.now();
     process.stdout.write('\x1b[?25l');
     this.#render();
-    this.#interval = setInterval(() => this.#render(), 80);
+    this.#interval = setInterval(() => this.#render(), 120);
   }
 
   stop() {
@@ -43,3 +43,4 @@ class LoadingSpinner {
 }
 
 export const spinner = new LoadingSpinner();
+

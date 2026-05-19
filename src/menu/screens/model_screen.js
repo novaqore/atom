@@ -1,30 +1,14 @@
 import { menu } from '../navigation.js';
-import { mute_input, unmute_input, rl } from '../../helpers/input.js';
-import header from '../../components/header.js';
-import { loadEnv, saveEnv, saveToShellEnv } from '../../utils/env.js';
-import { colors } from '../../utils/theme.js';
+import { mute_input, unmute_input, prompt } from '../../ui/input.js';
+import header from '../../ui/header.js';
+import { loadEnv, saveEnv } from '../../config/env.js';
+import { colors } from '../../ui/theme.js';
 
-function prompt(question) {
-  return new Promise((resolve) => {
-    let escaped = false;
-    const onKey = (_, key) => {
-      if (key?.name === 'escape' && !escaped) {
-        escaped = true;
-        process.stdin.emit('keypress', '\r', { name: 'return', sequence: '\r' });
-      }
-    };
-    process.stdin.on('keypress', onKey);
-    rl.question(`${question} `, (answer) => {
-      process.stdin.off('keypress', onKey);
-      resolve(escaped ? null : answer.trim());
-    });
-  });
-}
 
 export async function modelScreen() {
   while (true) {
     console.clear();
-    header();
+    await header();
 
     const env = loadEnv();
     const model = env?.MODEL;
@@ -44,7 +28,7 @@ export async function modelScreen() {
         const current = loadEnv() || {};
         current.MODEL = value;
         saveEnv(current);
-        saveToShellEnv('MODEL', value);
+
       }
     }
   }

@@ -1,5 +1,5 @@
 import readline from 'readline';
-import { colors } from '../utils/theme.js';
+import { colors } from '../ui/theme.js';
 
 export function menu(question, options) {
   return new Promise((resolve) => {
