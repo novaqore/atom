@@ -7,6 +7,7 @@ import { wake } from "./utils/wake.js";
 import { colors } from "./utils/theme.js";
 import { rl, mute_input, unmute_input, user_input } from "./helpers/input.js";
 import { addTokens } from "./utils/token_count.js";
+import { parseMarkdown } from "./helpers/markdown.js";
 import { abort as abortShell } from "./tools/commands/shell.js";
 import { loadEnv } from "./utils/env.js";
 
@@ -49,6 +50,7 @@ export default async function app() {
       tool_calls++;
 
       let assistantContent = "";
+      let renderedChars = 0;
       let assistantToolCalls = [];
 
       mute_input();
@@ -68,10 +70,13 @@ export default async function app() {
 
           if (delta?.content) {
             spinner.stop();
-            process.stdout.write(delta.content);
             assistantContent += delta.content;
+            const { output, consumed } = parseMarkdown(assistantContent, renderedChars);
+            if (output) {
+              process.stdout.write(output);
+              renderedChars = consumed;
+            }
           }
-
           if (delta?.tool_calls) {
             if (!working) {
               spinner.stop();
@@ -90,6 +95,12 @@ export default async function app() {
         currentAbort = null;
         unmute_input();
       }
+
+      if (renderedChars < assistantContent.length) {
+        process.stdout.write(assistantContent.slice(renderedChars));
+        renderedChars = assistantContent.length;
+      }
+      if (assistantContent) process.stdout.write(colors.reset);
 
       if (errored) {
         process.stdout.write(`\n${colors.red}${errored.message || errored}${colors.reset}\n`);
