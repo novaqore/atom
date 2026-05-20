@@ -1,4 +1,4 @@
-import { chat } from "./lib/novaqore.js";
+import { ai } from "./lib/novaqore.js";
 import { tools, runTool, displayTool, processToolCall } from "./tools/run_tool.js";
 import { system_prompt } from "./system/prompt.js";
 import { spinner } from "./ui/spinner.js";
@@ -10,6 +10,7 @@ import { addTokens } from "./ui/token_count.js";
 import { parseMarkdown } from "./ui/markdown.js";
 import { abort as abortShell } from "./tools/commands/shell.js";
 import { loadEnv } from "./config/env.js";
+import { saveHistory, loadHistory } from "./lib/history.js";
 
 const MAX_TOOL_CALLS = 50;
 
@@ -17,15 +18,15 @@ export default async function app() {
   console.clear()
   await header()
 
-  let currentAbort = null;
+
   process.stdin.on('keypress', (_, key) => {
     if (key?.name === 'escape') {
-      if (currentAbort) currentAbort();
+      ai.abort();
       abortShell();
     }
   });
 
-  let messages = [system_prompt];
+  let messages = [system_prompt, ...(loadHistory() || [])];
 
   mute_input(); 
   await wake();
@@ -61,8 +62,8 @@ export default async function app() {
       let working = false;
 
       try {
-        const { stream, abort } = await chat({ messages, tools, model: (loadEnv()?.MODEL) || "qwen3.6-27b" });
-        currentAbort = abort;
+        const { stream } = await ai.chat({ messages, tools, model: (loadEnv()?.MODEL) || "qwen3.6-27b" });
+
 
         for await (const chunk of stream) {
           addTokens(chunk);
@@ -92,7 +93,7 @@ export default async function app() {
         if (err.name === 'AbortError') aborted = true;
         else errored = err;
       } finally {
-        currentAbort = null;
+
         unmute_input();
       }
 
@@ -104,13 +105,21 @@ export default async function app() {
 
       if (errored) {
         process.stdout.write(`\n${colors.red}${errored.message || errored}${colors.reset}\n`);
+        // If partial tool_calls were streamed, discard them — they never executed.
+        // Keep any partial text so the model knows where it left off.
+        if (assistantToolCalls.length > 0 || assistantContent) {
+          messages.push({ role: "assistant", content: `${assistantContent || ''}[error: ${errored.message || errored}]` });
+          saveHistory(messages);
+        }
         break;
       }
+
 
       if (aborted) {
         process.stdout.write(`\n${colors.red}[aborted]${colors.reset}\n`);
         if (assistantContent) {
           messages.push({ role: "assistant", content: `${assistantContent} [interrupted by user]` });
+          saveHistory(messages);
         }
         break;
       }
@@ -121,6 +130,7 @@ export default async function app() {
         spinner.stop();
         process.stdout.write('\n');
         messages.push({ role: "assistant", content: assistantContent });
+        saveHistory(messages);
         break;
       }
 
@@ -144,6 +154,7 @@ export default async function app() {
         result = await runTool(name, args, working);
         messages.push({ tool_call_id: tc.id, role: "tool", content: result });
       }
+      saveHistory(messages);
     }
 
     user_input();

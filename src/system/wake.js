@@ -1,7 +1,8 @@
-import { chat } from "../lib/novaqore.js";
+
 import { system_prompt } from "./prompt.js";
 import { spinner } from "../ui/spinner.js";
 import { colors } from "../ui/theme.js";
+import { ai } from "../lib/novaqore.js";
 
 const WAKE_PROMPT = "Greet the user with a short greeting.";
 
@@ -10,7 +11,7 @@ export async function wake() {
 
   spinner.start('Waking up...', 'green');
   try {
-    const { stream } = await chat({ messages });
+    const { stream } = await ai.chat({ messages });
 
     for await (const chunk of stream) {
       const content = chunk.choices[0]?.delta?.content || '';

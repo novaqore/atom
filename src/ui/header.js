@@ -1,6 +1,6 @@
 import os from 'os';
 import { colors } from "./theme.js";
-import { getInternalUrl } from '../lib/novaqore.js';
+import { url } from '../lib/novaqore.js';
 import { current, checkUpdate } from '../system/details/version.js';
 
 export default async function header() {
@@ -14,7 +14,7 @@ export default async function header() {
     `RAM: ${(os.totalmem() / (1024 ** 3)).toFixed(1)}GB`,
     `Home: ${os.homedir()}`,
     `Shell: ${process.env.SHELL || process.env.COMSPEC || 'unknown'}`,
-    getInternalUrl() && `${colors.yellow}Local:${colors.reset} ${colors.white}${getInternalUrl()}${colors.reset}`,
+    url && `${colors.yellow}Local:${colors.reset} ${colors.white}${url}${colors.reset}`,
   ].filter(Boolean).join('  •  ');
 
   const width = process.stdout.columns || 80;
