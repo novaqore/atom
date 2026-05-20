@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync } from 'fs';
+import { readFileSync, unlinkSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { Command } from 'commander';
@@ -61,6 +61,19 @@ program
     const envKey = resolveKey(key);
     const env = loadEnv();
     console.log(env?.[envKey] || '(not set)');
+  });
+
+program
+  .command('delete history')
+  .description('Clear chat history to start fresh')
+  .action(() => {
+    const historyPath = join(process.env.HOME, '.atom', 'history.json');
+    if (existsSync(historyPath)) {
+      unlinkSync(historyPath);
+      console.log('Chat history cleared.');
+    } else {
+      console.log('No history file found.');
+    }
   });
 
 program.parse();

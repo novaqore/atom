@@ -1,6 +1,7 @@
 import { menu } from './navigation.js';
 import { mute_input, unmute_input } from '../ui/input.js';
 import header from '../ui/header.js';
+import { splash } from '../ui/splash.js';
 import { colors } from '../ui/theme.js';
 import { settingsScreen } from './screens/settings_screen.js';
 import app from '../app.js';
@@ -13,6 +14,7 @@ const intro = [
 ].join('\n');
 
 export async function mainMenu() {
+    await splash();
   while (true) {
     console.clear();
     await header();
