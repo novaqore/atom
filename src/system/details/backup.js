@@ -8,8 +8,6 @@ const formatBytes = (b) => {
   return `${(b / 1024 ** 3).toFixed(1)}GB`;
 };
 
-let cachedSize = null;
-
 function dirSize(dir) {
   if (!existsSync(dir)) return 0;
   let total = 0;
@@ -21,19 +19,9 @@ function dirSize(dir) {
   return total;
 }
 
-export function getBackupSize() {
-  if (cachedSize === null) cachedSize = dirSize('.atom/bak');
-  return formatBytes(cachedSize);
-}
-
-export function refreshBackupSize() {
-  cachedSize = null;
-}
-
 export const prompt = `Access your file Backups: Every sed and write operation automatically writes a backup to your .atom/bak/ with the file's absolute path mirrored and a timestamp suffix. Editing /Users/x/y.txt creates .atom/bak/Users/x/y.txt.<timestamp>.bak.
-Current backup folder size: ${getBackupSize()}
+Current backup folder size: ${formatBytes(dirSize('.atom/bak'))}
 To recover a file, use the shell tool:
 - List versions of a file: ls -lt .atom/bak\${ABS_PATH}.*.bak
 - Restore the most recent: cp .atom/bak\${ABS_PATH}.<timestamp>.bak \${ABS_PATH}
 Backups stack across every edit so older versions are also available.`;
-

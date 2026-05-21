@@ -7,7 +7,7 @@ export function saveHistory(messages) {
   try {
     mkdirSync(join(process.env.HOME, ".atom"), { recursive: true });
     writeFileSync(HISTORY_PATH, JSON.stringify(messages, null, 2));
-  } catch {}
+  } catch (e) { console.error(`saveHistory failed: ${e.message}`); }
 }
 
 export function loadHistory() {

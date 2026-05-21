@@ -1,23 +1,26 @@
-
-import { system_prompt } from "./prompt.js";
 import { spinner } from "../ui/spinner.js";
 import { colors } from "../ui/theme.js";
 import { ai } from "../lib/novaqore.js";
 
-const WAKE_PROMPT = "Greet the user with a short greeting.";
+export async function wake(messages) {
+  const hasHistory = messages.length > 1; // system prompt counts as 1
+  const wakePrompt = hasHistory ? "I'm back." : "Hey";
+  const wakeMessages = [
+    ...messages,
+    { role: "user", content: wakePrompt }
+  ];
 
-export async function wake() {
-  const messages = [system_prompt, { role: "user", content: WAKE_PROMPT }];
-
-  spinner.start('Waking up...', 'green');
+  spinner.start('Waking up..this might take a minute...', 'green');
+  let content = '';
   try {
-    const { stream } = await ai.chat({ messages });
+    const { stream } = await ai.chat({ messages: wakeMessages });
 
     for await (const chunk of stream) {
-      const content = chunk.choices[0]?.delta?.content || '';
-      if (content) {
+      const delta = chunk.choices[0]?.delta?.content || '';
+      if (delta) {
         spinner.stop();
-        process.stdout.write(content);
+        content += delta;
+        process.stdout.write(delta);
       }
     }
   } catch (err) {
@@ -26,4 +29,6 @@ export async function wake() {
   }
   spinner.stop();
   process.stdout.write('\n');
+
+  return content;
 }

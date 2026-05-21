@@ -47,7 +47,13 @@ export async function run(args, working = false) {
     };
 
     child.stdout.on('data', onData);
-    child.stderr.on('data', onData);
+    child.stderr.on('data', (d) => {
+      if (idleTimer) clearTimeout(idleTimer);
+      spinner.stop();
+      const text = d.toString();
+      out += text;
+      process.stdout.write(`${colors.red}${text}${colors.reset}`);
+    });
 
     const finish = (fallback) => {
       currentChild = null;

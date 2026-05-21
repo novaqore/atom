@@ -29,7 +29,10 @@ export default async function app() {
   let messages = [system_prompt, ...(loadHistory() || [])];
 
   mute_input(); 
-  await wake();
+  const wakeContent = await wake(messages);
+  if (wakeContent) {
+    messages.push({ role: "assistant", content: wakeContent });
+  }
   unmute_input();
   user_input();
 
