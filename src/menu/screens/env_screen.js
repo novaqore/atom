@@ -8,18 +8,62 @@ import path from 'path';
 
 const confPath = path.join(homedir(), '.atom', 'conf', '.env');
 
-function loadSelectedKeys() {
-  if (!existsSync(confPath)) return [];
-  return readFileSync(confPath, 'utf-8')
-    .split('\n')
-    .map(l => l.trim())
-    .filter(l => l && !l.startsWith('#'));
+const SHELL_CONFIGS = [
+  '.bashrc',
+  '.bash_profile',
+  '.profile',
+  '.zshrc',
+  '.zprofile',
+  '.zshenv',
+];
+
+function parseExportsFromFiles() {
+  const map = new Map();
+  const home = homedir();
+  for (const file of SHELL_CONFIGS) {
+    const filePath = path.join(home, file);
+    if (!existsSync(filePath)) continue;
+    try {
+      const content = readFileSync(filePath, 'utf-8');
+      for (const line of content.split('\n')) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('#') || !trimmed) continue;
+        const match = trimmed.match(/^export\s+([A-Za-z_][A-Za-z0-9_]*)/);
+        if (match) {
+          const key = match[1];
+          if (!map.has(key)) {
+            map.set(key, filePath);
+          }
+        }
+      }
+    } catch { /* skip unreadable files */ }
+  }
+  return map;
 }
 
-function saveSelectedKeys(keys) {
+function loadSelectedKeys() {
+  if (!existsSync(confPath)) return new Map();
+  const map = new Map();
+  readFileSync(confPath, 'utf-8')
+    .split('\n')
+    .map(l => l.trim())
+    .filter(l => l && !l.startsWith('#'))
+    .forEach(line => {
+      const eqIndex = line.indexOf('=');
+      if (eqIndex !== -1) {
+        const key = line.slice(0, eqIndex);
+        const source = line.slice(eqIndex + 1);
+        map.set(key, source);
+      }
+    });
+  return map;
+}
+
+function saveSelectedKeys(entries) {
   const dir = path.dirname(confPath);
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  writeFileSync(confPath, keys.length ? keys.join('\n') + '\n' : '');
+  const lines = [...entries].map(([k, v]) => `${k}=${v}`);
+  writeFileSync(confPath, lines.length ? lines.join('\n') + '\n' : '');
 }
 
 export async function envScreen() {
@@ -27,8 +71,11 @@ export async function envScreen() {
     console.clear();
     await header();
 
-    const allKeys = Object.keys(process.env).sort();
-    const selectedKeys = loadSelectedKeys();
+    const fileSources = parseExportsFromFiles();
+    const envKeys = new Set(Object.keys(process.env));
+    const allKeysSet = new Set([...fileSources.keys(), ...envKeys]);
+    const allKeys = [...allKeysSet].sort();
+    const selectedEntries = loadSelectedKeys();
 
     if (allKeys.length === 0) {
       process.stdout.write(`  ${colors.grey}No environment variables found.${colors.reset}\n`);
@@ -42,17 +89,27 @@ export async function envScreen() {
 
     const displayOptions = [...allKeys, 'Back'];
 
-    // Pre-select indices that match current conf
     const preSelected = new Set();
     allKeys.forEach((key, i) => {
-      if (selectedKeys.includes(key)) preSelected.add(i);
+      if (selectedEntries.has(key)) preSelected.add(i);
     });
 
-    // Callback fires on every space toggle — saves immediately
     const onToggle = (selectedIndices) => {
       const keyIndices = selectedIndices.filter(i => i < allKeys.length);
-      const keys = keyIndices.map(i => allKeys[i]);
-      saveSelectedKeys(keys);
+      const entries = new Map();
+      keyIndices.forEach(i => {
+        const key = allKeys[i];
+        let source;
+        if (fileSources.has(key)) {
+          source = fileSources.get(key);
+        } else if (envKeys.has(key)) {
+          source = 'process.env';
+        } else {
+          source = 'unknown';
+        }
+        entries.set(key, source);
+      });
+      saveSelectedKeys(entries);
     };
 
     mute_input();

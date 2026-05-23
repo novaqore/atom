@@ -1,5 +1,6 @@
 import { spawn } from 'child_process';
 import { shell, shellName } from '../../system/details/shell.js';
+import { resolveEnvVars } from '../../system/details/env_keys.js';
 import { spinner } from '../../ui/spinner.js';
 import { colors } from '../../ui/theme.js';
 import { rl } from '../../ui/input.js';
@@ -31,7 +32,9 @@ export async function run(args, working = false) {
     rl.pause();
     if (process.stdin.isTTY) process.stdin.setRawMode(false);
 
-    const child = spawn(args.command, { shell, stdio: ['inherit', 'pipe', 'pipe'] });
+    const resolvedEnv = resolveEnvVars();
+    const env = { ...process.env, ...resolvedEnv };
+    const child = spawn(args.command, { shell, stdio: ['inherit', 'pipe', 'pipe'], env });
     currentChild = child;
     let out = '';
 
