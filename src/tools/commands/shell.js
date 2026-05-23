@@ -31,15 +31,11 @@ export async function run(args, working = false) {
     rl.pause();
     if (process.stdin.isTTY) process.stdin.setRawMode(false);
 
-    // Idle-timeout: if no output within 500ms, stop spinner so TTY prompts (ssh password, sudo, read) can appear cleanly
-    const idleTimer = working ? setTimeout(() => spinner.stop(), 500) : null;
-
     const child = spawn(args.command, { shell, stdio: ['inherit', 'pipe', 'pipe'] });
     currentChild = child;
     let out = '';
 
     const onData = (d) => {
-      if (idleTimer) clearTimeout(idleTimer);
       spinner.stop();
       const text = d.toString();
       out += text;
@@ -48,7 +44,6 @@ export async function run(args, working = false) {
 
     child.stdout.on('data', onData);
     child.stderr.on('data', (d) => {
-      if (idleTimer) clearTimeout(idleTimer);
       spinner.stop();
       const text = d.toString();
       out += text;
@@ -57,7 +52,6 @@ export async function run(args, working = false) {
 
     const finish = (fallback) => {
       currentChild = null;
-      if (idleTimer) clearTimeout(idleTimer);
       spinner.stop();
       if (process.stdin.isTTY) process.stdin.setRawMode(true);
       rl.resume();
@@ -78,4 +72,3 @@ export function abort() {
     currentChild = null;
   }
 }
-
