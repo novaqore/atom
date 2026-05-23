@@ -1,14 +1,19 @@
 import os from 'os';
 import { colors } from "./theme.js";
 import { url } from '../lib/novaqore.js';
-import { current, checkUpdate } from '../system/details/version.js';
+import { current, checkUpdate, hasUpdate, latest } from '../system/details/version.js';
 
 export default async function header() {
 
-  checkUpdate().catch(() => {});
+  await checkUpdate();
+
+  const versionColor = hasUpdate ? colors.red : colors.cyan;
+  const versionText = hasUpdate
+    ? `v${current} → ${latest} (run: npm install -g @novaqore/atom)`
+    : `v${current}`;
 
   const info = [
-    `${colors.cyan}Atom${colors.reset} ${colors.white}v${current}${colors.reset}`,
+    `${colors.cyan}Atom${colors.reset} ${versionColor}${versionText}${colors.reset}`,
     `${os.platform()} (${os.arch()})`,
     `CPUs: ${os.cpus().length}`,
     `RAM: ${(os.totalmem() / (1024 ** 3)).toFixed(1)}GB`,
@@ -21,4 +26,3 @@ export default async function header() {
   process.stdout.write(`${info}\n`);
   process.stdout.write(`${colors.grey}${'─'.repeat(width)}${colors.reset}\n`);
 }
-

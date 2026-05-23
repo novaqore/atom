@@ -6,6 +6,7 @@ import { modelScreen } from './model_screen.js';
 import { toolsScreen } from './tools_screen.js';
 import { sshHostsScreen } from './ssh_hosts_screen.js';
 import { backupScreen } from './backup_screen.js';
+import { envScreen } from './env_screen.js';
 
 const screens = {
   'Base URL': baseUrlScreen,
@@ -13,6 +14,7 @@ const screens = {
   'Tools': toolsScreen,
   'SSH Hosts': sshHostsScreen,
   'Backup': backupScreen,
+  'Env Vars': envScreen,
 };
 
 export async function settingsScreen() {

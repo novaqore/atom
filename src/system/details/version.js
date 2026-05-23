@@ -6,8 +6,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(join(__dirname, '../../..', 'package.json'), 'utf-8'));
 
 export const current = pkg.version;
-let latest = null;
-let hasUpdate = false;
+export let latest = null;
+export let hasUpdate = false;
 let checked = false;
 
 export async function checkUpdate() {
